@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NetGate - 给单个 Windows 程序断网的轻量工具</title>
+<meta name="description" content="NetGate 是一个开源免费的 Windows 应用联网管理工具。点一下给单个程序断网，不影响系统和其他软件。支持程序选择器、批量管理、配置导入导出。">
+<meta name="keywords" content="Windows 防火墙,程序断网,禁止程序联网,应用联网管理,开源工具,流量控制">
+<meta property="og:title" content="NetGate - 给单个程序断网">
+<meta property="og:description" content="Windows 自带防火墙能断网，但太难用。NetGate 让你点一下就给单个程序断网，不改系统设置。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://jiucheng-lin.github.io/netgate/">
+<style>
+  :root { --bg:#f7f8fa; --card:#fff; --ink:#1f2430; --muted:#6b7280; --line:#e5e7eb;
+          --accent:#2563eb; --accent-soft:#eff6ff; --ok:#16a34a; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:"Microsoft YaHei","Segoe UI",system-ui,sans-serif; background:var(--bg); color:var(--ink); line-height:1.7; }
+  .wrap { max-width:900px; margin:0 auto; padding:0 20px; }
+  header { background:var(--card); border-bottom:1px solid var(--line); padding:16px 0; }
+  header .wrap { display:flex; justify-content:space-between; align-items:center; }
+  .logo { font-size:22px; font-weight:600; } .logo span { color:var(--accent); }
+  .btn { display:inline-block; background:var(--accent); color:#fff; padding:10px 20px; border-radius:6px; text-decoration:none; font-size:14px; }
+  .btn:hover { background:#1d4ed8; }
+  .btn.ghost { background:#fff; color:var(--accent); border:1px solid var(--accent); }
+  .hero { text-align:center; padding:70px 20px 50px; }
+  .hero h1 { font-size:38px; margin:0 0 16px; line-height:1.3; }
+  .hero h1 em { color:var(--accent); font-style:normal; }
+  .hero p { font-size:17px; color:var(--muted); max-width:620px; margin:0 auto 28px; }
+  .hero .actions { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+  .hero .meta { font-size:12px; color:var(--muted); margin-top:14px; }
+  .shot { max-width:100%; border:1px solid var(--line); border-radius:12px; box-shadow:0 8px 30px rgba(0,0,0,.08); }
+  section { padding:44px 0; }
+  h2 { font-size:26px; margin:0 0 8px; text-align:center; }
+  .sub { text-align:center; color:var(--muted); margin-bottom:32px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:18px; }
+  .f { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:22px; }
+  .f h3 { margin:0 0 8px; font-size:16px; }
+  .f p { margin:0; color:var(--muted); font-size:14px; }
+  .trust { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:28px; }
+  .trust ul { margin:0; padding-left:20px; } .trust li { margin:8px 0; }
+  .steps { counter-reset:s; } .step { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:20px 22px 20px 66px; position:relative; margin-bottom:12px; }
+  .step:before { counter-increment:s; content:counter(s); position:absolute; left:20px; top:20px; width:30px; height:30px; background:var(--accent); color:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; }
+  .step h3 { margin:0 0 4px; font-size:15px; } .step p { margin:0; color:var(--muted); font-size:14px; }
+  .cta { text-align:center; padding:60px 20px; background:var(--accent-soft); border-radius:12px; margin:20px 0 60px; }
+  .cta h2 { margin-bottom:12px; }
+  footer { text-align:center; color:var(--muted); font-size:13px; padding:30px 20px 50px; border-top:1px solid var(--line); }
+  footer a { color:var(--accent); }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="logo"><span>Net</span>Gate</div>
+    <a class="btn" href="https://github.com/jiucheng-lin/netgate/releases/download/v1.1.0/NetGate-v1.1.0-windows.zip">下载 Windows 版</a>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>给单个程序断网，<em>点一下就好</em></h1>
+    <p>Windows 自带防火墙能断网，但太难用。NetGate 让你点一下就给单个程序断网，不改系统设置，不影响其他软件。开源、免费、零依赖。</p>
+    <div class="actions">
+      <a class="btn" href="https://github.com/jiucheng-lin/netgate/releases/download/v1.1.0/NetGate-v1.1.0-windows.zip">下载 zip</a>
+      <a class="btn ghost" href="https://github.com/jiucheng-lin/netgate">查看源码</a>
+    </div>
+    <div class="meta">Windows 8+ · 无需安装 · MIT 协议</div>
+  </div>
+
+  <img class="shot" src="screenshot.png" alt="NetGate 主界面截图">
+
+  <section>
+    <h2>它解决什么问题</h2>
+    <p class="sub">只做一件事，但做得简单</p>
+    <div class="grid">
+      <div class="f"><h3>后台偷跑流量</h3><p>某个软件没打开却在偷偷更新、上传，单独把它断网。</p></div>
+      <div class="f"><h3>家长控制</h3><p>只给具体某个程序设限，而不是把整台机器断网。</p></div>
+      <div class="f"><h3>测试隔离</h3><p>测试环境里精确隔离某个程序的网络访问。</p></div>
+      <div class="f"><h3>临时断网</h3><p>随时暂停或恢复，不用反复改系统防火墙设置。</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>三步上手</h2>
+    <p class="sub">不用手打路径，不会命令行也能用</p>
+    <div class="steps">
+      <div class="step"><h3>下载解压</h3><p>下载 zip，解压到任意文件夹，双击 START.bat。</p></div>
+      <div class="step"><h3>选一个程序</h3><p>点「从列表选择」挑一个，或把 .exe 拖进页面。</p></div>
+      <div class="step"><h3>点禁止联网</h3><p>完成。随时可以暂停、恢复或解除。</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>为什么可以放心用</h2>
+    <p class="sub">一个要管理员权限的工具，信任必须说清楚</p>
+    <div class="trust">
+      <ul>
+        <li><b>只加自己的规则</b>：所有规则带 NG- 前缀，不改任何已存在的规则</li>
+        <li><b>一键清除</b>：只删 NG- 规则，系统和其他软件的防火墙设置原样不动</li>
+        <li><b>完全可逆</b>：删掉规则、删掉目录，机器上不留痕迹</li>
+        <li><b>默认不联网收集</b>：服务只监听 127.0.0.1；匿名统计默认关闭，要手动开启</li>
+        <li><b>代码开源可审计</b>：纯 PowerShell + 一个 HTML 页面，无依赖、无第三方 SDK</li>
+      </ul>
+      <p style="margin:16px 0 0"><a href="https://github.com/jiucheng-lin/netgate/blob/main/PRIVACY.md">阅读完整隐私政策 →</a></p>
+    </div>
+  </section>
+
+  <div class="cta">
+    <h2>现在就试试</h2>
+    <p>开源免费，下载即用。有问题欢迎提 issue。</p>
+    <a class="btn" href="https://github.com/jiucheng-lin/netgate/releases/download/v1.1.0/NetGate-v1.1.0-windows.zip">下载 NetGate</a>
+  </div>
+</div>
+
+<footer>
+  NetGate · MIT License · <a href="https://github.com/jiucheng-lin/netgate">GitHub</a> · <a href="https://github.com/jiucheng-lin/netgate/blob/main/PRIVACY.md">Privacy</a>
+</footer>
+</body>
+</html>

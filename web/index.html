@@ -89,6 +89,35 @@
   .field input { width: 100%; padding: 9px 11px; border: 1px solid var(--line); border-radius: 6px; font-size: 13px; }
   footer { text-align: center; color: var(--muted); font-size: 12px; padding: 20px; }
   .dragover { outline: 2px dashed var(--accent); outline-offset: -6px; background: var(--accent-soft); }
+  .guide { display: flex; align-items: center; gap: 14px; background: var(--accent-soft);
+           border: 1px solid #c7dbfb; border-radius: 10px; padding: 12px 16px; margin-bottom: 18px; }
+  .guide.hidden { display: none; }
+  .guide-num { background: var(--accent); color: #fff; border-radius: 50%; width: 22px; height: 22px;
+               display: inline-flex; align-items: center; justify-content: center; font-size: 12px; flex: none; }
+  .guide-steps { flex: 1; font-size: 13px; }
+  .guide-steps b { color: var(--accent); }
+  .guide-steps span { color: var(--muted); }
+  .guide button { flex: none; }
+  .suggest { background:#fffbeb; border:1px solid #fde68a; border-radius:10px; padding:14px 18px; margin-bottom:18px; }
+  .suggest.hidden { display:none; }
+  .suggest-head { display:flex; justify-content:space-between; align-items:center; cursor:pointer; }
+  .suggest-head b { font-size:13px; color:#92400e; }
+  .suggest-head span { font-size:12px; color:var(--muted); }
+  .suggest-body { margin-top:10px; display:none; }
+  .suggest.open .suggest-body { display:block; }
+  .sug-item { padding:7px 0; border-top:1px solid #fde68a; font-size:12px; display:flex;
+              justify-content:space-between; align-items:center; gap:10px; }
+  .sug-item .nm { font-weight:500; } .sug-item .pt { color:var(--muted); word-break:break-all; }
+  .sug-item button { padding:4px 10px; font-size:11px; }
+  .ai { background:linear-gradient(135deg,#eff6ff,#f5f3ff); border:1px solid #dbe4fb; border-radius:10px; padding:18px 20px; margin-bottom:18px; }
+  .ai h2 { font-size:15px; margin:0 0 4px; }
+  .ai .hint { margin:0 0 12px; }
+  .ai-row { display:flex; gap:8px; flex-wrap:wrap; }
+  .ai-row input { flex:1; min-width:240px; }
+  .ai-tag { display:inline-block; background:#fff; border:1px solid #dbe4fb; border-radius:6px; padding:4px 9px; font-size:11px; color:#4338ca; margin:4px 6px 0 0; cursor:pointer; }
+  .ai-tag:hover { background:#eef2ff; }
+  .ai-res { margin-top:10px; font-size:12px; }
+  .ai-res .hit { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:6px 0; border-top:1px solid #e0e7ff; }
 </style>
 </head>
 <body data-page-node-id="uDO20BLjvn8jscyDZlevN5">
@@ -101,11 +130,34 @@
 </header>
 
 <div class="wrap" id="dropZone" data-page-node-id="GnbkGqTw1x75HBHJC2FHOk">
+  <div class="guide" id="guide">
+    <span class="guide-num">1</span>
+    <div class="guide-steps" id="guideText"><b>先选程序</b> <span>→ 点「从列表选择」挑一个，或直接拖入 .exe</span></div>
+    <button id="guideSkip">跳过</button>
+  </div>
+  <div class="suggest hidden" id="suggest">
+    <div class="suggest-head" id="suggestHead">
+      <b id="suggestTitle">有正在运行的程序还没管理</b>
+      <span id="suggestToggle">展开查看 ▾</span>
+    </div>
+    <div class="suggest-body" id="suggestBody"></div>
+  </div>
+  <div class="ai">
+    <h2>AI 辅助</h2>
+    <p class="hint">本地智能分析，不调用外部服务。试试说「把 XX 断网」，或看它推荐哪些后台程序值得管。</p>
+    <div class="ai-row">
+      <input type="text" id="aiInput" placeholder="例如：把 chrome 断网 / 禁止后台同步">
+      <button id="aiAsk">理解并查找</button>
+      <button id="aiSuggest" class="ghost">智能推荐</button>
+    </div>
+    <div class="ai-res" id="aiRes"></div>
+  </div>
   <div class="card" data-page-node-id="qBuxYyMI9Cybo6YH0D3asY">
     <h2 data-page-node-id="DtS2Llv79TBZVzvAlkJUAY">状态</h2>
     <div class="stats" data-page-node-id="iOqi0SdRU9nHKAD18B2AIn">
       <div class="stat" data-page-node-id="2QNWKcRBOhdtSbTiut9IaC"><b id="sBlocked" data-page-node-id="oB0um0bJcix8pKzbSPCpE4">-</b><span data-page-node-id="DRLkDr2SC3zCvkMLuql8vE">已管理程序</span></div>
       <div class="stat" data-page-node-id="fEZDI3Ra3PWMyGtEW6uM59"><b id="sRules" data-page-node-id="8GGVtyv5vgQvJtS34Cj7OG">-</b><span data-page-node-id="eDmCb3gVZV74QJgb6ufdC3">防火墙规则</span></div>
+      <div class="stat"><b id="sMonth">-</b><span>本月拦截次数</span></div>
       <div class="stat" data-page-node-id="Pv0vHgE2U5Q8G9v5zhwZ1C"><b id="sVersion" data-page-node-id="GUO6BazVpGHrxHS4WOfDap">-</b><span data-page-node-id="J60DuVxBeEUlCBOhekgWji">版本</span></div>
     </div>
   </div>
@@ -220,6 +272,7 @@ function refreshStatus() {
     $('sBlocked').textContent = d.BlockedCount;
     $('sRules').textContent = d.RuleCount;
     $('sVersion').textContent = d.Version;
+    $('sMonth').textContent = d.MonthBlockCount !== undefined ? d.MonthBlockCount : '-';
     var b = $('adminBadge');
     if (d.IsAdmin) { b.textContent = '管理员权限 · 就绪'; b.className = 'badge'; }
     else { b.textContent = '非管理员 · 写入将失败'; b.className = 'badge warn'; }
@@ -246,7 +299,95 @@ function refreshList() {
     });
   });
 }
-function refreshAll() { refreshStatus(); refreshList(); }
+function refreshAll() { refreshStatus(); refreshList(); loadSuggestions(); }
+
+// ---- New program suggestions (return hook) ----
+function loadSuggestions() {
+  api('/api/suggestions', 'GET').then(function(d){
+    if (!d || !d.count || !d.apps || !d.apps.length) { $('suggest').classList.add('hidden'); return; }
+    $('suggest').classList.remove('hidden');
+    $('suggestTitle').textContent = '发现 ' + d.count + ' 个正在运行的程序还没管理';
+    var body = $('suggestBody'); body.innerHTML = '';
+    d.apps.forEach(function(a){
+      var row = document.createElement('div'); row.className = 'sug-item';
+      row.innerHTML = '<div><div class="nm">' + escapeHtml(a.Name) + '</div>' +
+                      '<div class="pt">' + escapeHtml(a.Path) + '</div></div>' +
+                      '<button data-path="' + attr(a.Path) + '">禁止联网</button>';
+      body.appendChild(row);
+    });
+  }).catch(function(){ $('suggest').classList.add('hidden'); });
+}
+$('suggestHead').onclick = function(){
+  var s = $('suggest'); s.classList.toggle('open');
+  $('suggestToggle').textContent = s.classList.contains('open') ? '收起 ▴' : '展开查看 ▾';
+};
+$('suggestBody').addEventListener('click', function(e){
+  var b = e.target.closest('button'); if (!b) return;
+  api('/api/block', 'POST', { path: b.getAttribute('data-path') }).then(function(d){
+    if (d.ok) { refreshAll(); advanceGuide(2); }
+  });
+});
+
+// ---- AI assist (local heuristics) ----
+function aiHit(name, path, extra) {
+  return '<div class="hit"><div><b>' + escapeHtml(name) + '</b>' +
+         (extra ? '<div style="color:var(--muted)">' + escapeHtml(extra) + '</div>' : '') +
+         '<div style="color:var(--muted);word-break:break-all">' + escapeHtml(path) + '</div></div>' +
+         '<button data-path="' + attr(path) + '">禁止</button></div>';
+}
+function bindAiButtons() {
+  $('aiRes').querySelectorAll('button[data-path]').forEach(function(b){
+    b.onclick = function(){
+      api('/api/block', 'POST', { path: b.getAttribute('data-path') }).then(function(d){
+        if (d.ok) { setMsg('addMsg','已禁止：'+d.path,true); refreshAll(); advanceGuide(2); }
+      });
+    };
+  });
+}
+$('aiAsk').onclick = function(){
+  var t = $('aiInput').value.trim();
+  if (!t) { $('aiRes').innerHTML = '<span style="color:var(--muted)">先输入一句话</span>'; return; }
+  $('aiRes').innerHTML = '<span style="color:var(--muted)">理解中...</span>';
+  api('/api/ai-parse', 'POST', { text: t }).then(function(d){
+    if (!d.ok || !d.count) { $('aiRes').innerHTML = '<span style="color:var(--muted)">没找到匹配的程序，试试说完整一点的名字</span>'; return; }
+    $('aiRes').innerHTML = '找到 ' + d.count + ' 个匹配：' + d.matches.map(function(m){ return aiHit(m.Name, m.Path, '匹配度 '+m.Score); }).join('');
+    bindAiButtons();
+  });
+};
+$('aiSuggest').onclick = function(){
+  $('aiRes').innerHTML = '<span style="color:var(--muted)">分析中...</span>';
+  api('/api/ai-suggest', 'GET').then(function(d){
+    if (!d.count) { $('aiRes').innerHTML = '<span style="color:var(--muted)">没有发现值得推荐的后台程序</span>'; return; }
+    $('aiRes').innerHTML = '推荐 ' + d.count + ' 个（按后台流量嫌疑排序）：' +
+      d.apps.map(function(a){ return aiHit(a.Name, a.Path, a.Reason); }).join('');
+    bindAiButtons();
+  });
+};
+
+// ---- Onboarding guide (non-blocking, 3 steps) ----
+var guideKey = 'netgate_guide_done_v1';
+var guideStep = 0;
+function initGuide() {
+  if (localStorage.getItem(guideKey)) { $('guide').classList.add('hidden'); return; }
+  guideStep = 0;
+}
+function advanceGuide(step) {
+  if (localStorage.getItem(guideKey)) return;
+  if (step === 1 && guideStep === 0) {
+    guideStep = 1;
+    $('guideText').innerHTML = '<b>再禁止联网</b> <span>→ 路径已填好，点「禁止联网」</span>';
+  } else if (step === 2) {
+    guideStep = 2;
+    $('guideText').innerHTML = '<b>完成</b> <span>→ 已管理 ' + (document.querySelectorAll('#ruleBody tr').length) + ' 个程序，可随时暂停或解除</span>';
+    localStorage.setItem(guideKey, '1');
+    setTimeout(function(){ $('guide').classList.add('hidden'); }, 3500);
+  }
+}
+$('guideSkip').onclick = function(){
+  localStorage.setItem(guideKey, '1');
+  $('guide').classList.add('hidden');
+};
+initGuide();
 
 // ---- Add program ----
 $('btnBlock').onclick = function(){
@@ -254,7 +395,7 @@ $('btnBlock').onclick = function(){
   if (!p) { setMsg('addMsg', '请输入程序路径', false); return; }
   setMsg('addMsg', '处理中...', true);
   api('/api/block', 'POST', { path: p }).then(function(d){
-    if (d.ok) { setMsg('addMsg', '已禁止：' + d.path, true); $('exePath').value=''; refreshAll(); }
+    if (d.ok) { setMsg('addMsg', '已禁止：' + d.path, true); $('exePath').value=''; refreshAll(); advanceGuide(2); }
     else setMsg('addMsg', '失败：' + (d.error || (d.errors||[]).join('; ')), false);
   }).catch(function(e){ setMsg('addMsg', '请求失败：'+e, false); });
 };
@@ -292,6 +433,7 @@ function renderPicker(q) {
       $('exePath').value = x.Path;
       $('pickOverlay').classList.remove('show');
       setMsg('addMsg', '已选择：' + x.Name, true);
+      advanceGuide(1);
     };
     box.appendChild(d);
   });
@@ -313,7 +455,7 @@ dz.addEventListener('drop', function(e){
   var files = e.dataTransfer.files;
   if (!files || !files.length) return;
   var p = files[0].path || files[0].name;
-  if (p) { $('exePath').value = p; setMsg('addMsg', '已拖入：' + files[0].name, true); }
+  if (p) { $('exePath').value = p; setMsg('addMsg', '已拖入：' + files[0].name, true); advanceGuide(1); }
 });
 
 // ---- Batch scan ----

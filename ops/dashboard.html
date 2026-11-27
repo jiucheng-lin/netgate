@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NetGate 运营看板</title>
+<style>
+  :root { --bg:#f7f8fa; --card:#fff; --ink:#1f2430; --muted:#6b7280; --line:#e5e7eb;
+          --accent:#2563eb; --accent-soft:#eff6ff; --ok:#16a34a; --warn:#d97706; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:"Microsoft YaHei","Segoe UI",sans-serif; background:var(--bg); color:var(--ink); font-size:14px; }
+  .wrap { max-width:1000px; margin:0 auto; padding:24px 20px 60px; }
+  h1 { font-size:22px; margin:0 0 4px; } .sub { color:var(--muted); margin:0 0 24px; font-size:13px; }
+  .cfg { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:18px 20px; margin-bottom:20px; }
+  .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  input { flex:1; min-width:220px; padding:9px 11px; border:1px solid var(--line); border-radius:6px; font-size:13px; }
+  button { padding:9px 18px; background:var(--accent); color:#fff; border:0; border-radius:6px; cursor:pointer; font-size:13px; }
+  .msg { color:var(--muted); font-size:12px; margin-top:8px; min-height:16px; }
+  .msg.err { color:#dc2626; }
+  .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin-bottom:20px; }
+  .kpi { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:18px; }
+  .kpi b { display:block; font-size:28px; color:var(--accent); }
+  .kpi span { color:var(--muted); font-size:12px; }
+  .panel { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:20px; margin-bottom:18px; }
+  .panel h2 { font-size:15px; margin:0 0 14px; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th,td { text-align:left; padding:9px 8px; border-bottom:1px solid var(--line); }
+  th { color:var(--muted); font-weight:500; }
+  .funnel { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .fstep { background:var(--accent-soft); border:1px solid #c7dbfb; border-radius:8px; padding:12px 16px; text-align:center; min-width:120px; }
+  .fstep b { display:block; font-size:22px; color:var(--accent); }
+  .fstep span { font-size:12px; color:var(--muted); }
+  .arr { color:var(--muted); }
+  .bar { height:8px; background:var(--accent); border-radius:4px; min-width:2px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>NetGate 运营看板</h1>
+  <p class="sub">读取 Cloudflare Worker 的匿名统计数据 · 数据只在你自己的 Worker 上</p>
+
+  <div class="cfg">
+    <div class="row">
+      <input type="text" id="endpoint" placeholder="Worker 地址，如 https://netgate-xxx.workers.dev">
+      <input type="text" id="token" placeholder="STATS_TOKEN">
+      <button id="load">加载数据</button>
+    </div>
+    <div class="msg" id="msg">填入你部署的 Worker 地址和 token，点加载。配置会记在本机浏览器。</div>
+  </div>
+
+  <div id="data" style="display:none">
+    <div class="cards" id="kpis"></div>
+
+    <div class="panel">
+      <h2>转化漏斗</h2>
+      <div class="funnel" id="funnel"></div>
+    </div>
+
+    <div class="panel">
+      <h2>功能使用（累计 / 失败）</h2>
+      <table><thead><tr><th>事件</th><th>累计</th><th>失败</th></tr></thead><tbody id="events"></tbody></table>
+    </div>
+
+    <div class="panel">
+      <h2>近 7 天趋势</h2>
+      <table><thead><tr><th>日期</th><th>禁止联网</th><th>首次打开</th><th>7日回访</th></tr></thead><tbody id="daily"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<script>
+function $(id){ return document.getElementById(id); }
+var LABELS = { block:'禁止联网', unblock:'解除', scan:'扫描目录', export:'导出配置',
+  import:'导入配置', enable:'恢复', disable:'暂停', reset:'清除全部',
+  first_open:'首次打开', first_block:'首次拦截', return_7d:'7日回访', app_start:'启动', error:'错误' };
+
+(function(){
+  $('endpoint').value = localStorage.getItem('ng_ep') || '';
+  $('token').value = localStorage.getItem('ng_tk') || '';
+})();
+
+$('load').onclick = function(){
+  var ep = $('endpoint').value.trim().replace(/\/$/,'');
+  var tk = $('token').value.trim();
+  if (!ep || !tk) { setMsg('请填地址和 token', true); return; }
+  localStorage.setItem('ng_ep', ep); localStorage.setItem('ng_tk', tk);
+  setMsg('加载中...', false);
+  fetch(ep + '/stats?token=' + encodeURIComponent(tk))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (!d.ok) { setMsg('失败：' + (d.error||'unknown'), true); return; }
+      render(d);
+      $('data').style.display = 'block';
+      setMsg('已加载 · ' + (d.generated||''), false);
+    })
+    .catch(function(e){ setMsg('请求失败：' + e, true); });
+};
+function setMsg(t, err){ var m=$('msg'); m.textContent=t; m.className='msg'+(err?' err':''); }
+
+function render(d){
+  var t = d.totals || {}, f = d.failures || {};
+  var total = 0; for (var k in t) total += t[k];
+  var kpis = [
+    ['累计事件', total],
+    ['首次打开', t.first_open||0],
+    ['首次拦截', t.first_block||0],
+    ['7日回访', t.return_7d||0],
+    ['禁止联网', t.block||0]
+  ];
+  $('kpis').innerHTML = kpis.map(function(x){ return '<div class="kpi"><b>'+x[1]+'</b><span>'+x[0]+'</span></div>'; }).join('');
+
+  var steps = [
+    ['首次打开', t.first_open||0],
+    ['首次拦截', t.first_block||0],
+    ['禁止联网（累计）', t.block||0]
+  ];
+  $('funnel').innerHTML = steps.map(function(s,i){
+    return (i>0?'<span class="arr">→</span>':'') +
+      '<div class="fstep"><b>'+s[1]+'</b><span>'+s[0]+'</span></div>';
+  }).join('');
+
+  var order = ['block','first_open','first_block','return_7d','unblock','scan','export','import','enable','disable','reset','error'];
+  $('events').innerHTML = order.filter(function(k){ return t[k]!==undefined || f[k]!==undefined; })
+    .map(function(k){ return '<tr><td>'+(LABELS[k]||k)+'</td><td>'+(t[k]||0)+'</td><td>'+(f[k]||0)+'</td></tr>'; }).join('')
+    || '<tr><td colspan="3" style="color:var(--muted)">暂无数据</td></tr>';
+
+  var days = d.daily || {};
+  var keys = Object.keys(days).sort().reverse();
+  $('daily').innerHTML = keys.map(function(k){
+    var r = days[k]||{};
+    return '<tr><td>'+k+'</td><td>'+(r.block||0)+'</td><td>'+(r.first_open||0)+'</td><td>'+(r.return_7d||0)+'</td></tr>';
+  }).join('') || '<tr><td colspan="4" style="color:var(--muted)">暂无数据</td></tr>';
+}
+</script>
+</body>
+</html>

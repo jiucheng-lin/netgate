@@ -68,7 +68,38 @@ function Json($obj) {
 # ---- Optional telemetry (same storage as ops/telemetry.ps1) ----
 $script:OptCfgFile = Join-Path $env:LOCALAPPDATA 'NetGate\telemetry.json'
 $script:OptQueueFile = Join-Path $env:LOCALAPPDATA 'NetGate\telemetry-queue.jsonl'
+$script:OptFunnelFile = Join-Path $env:LOCALAPPDATA 'NetGate\funnel.json'
 $script:OptVersion = '1.0.0'
+
+function Get-FunnelState {
+    if (Test-Path -LiteralPath $script:OptFunnelFile) {
+        try { return ([System.IO.File]::ReadAllText($script:OptFunnelFile) | ConvertFrom-Json) } catch {}
+    }
+    return [pscustomobject]@{ firstOpen = ''; firstBlock = ''; lastOpen = ''; blockMonth = ''; blockCount = 0 }
+}
+function Set-FunnelState($s) {
+    $dir = Split-Path -Parent $script:OptFunnelFile
+    if (-not (Test-Path -LiteralPath $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
+    $j = ConvertTo-Json -InputObject $s -Depth 4 -Compress
+    [System.IO.File]::WriteAllText($script:OptFunnelFile, $j, (New-Object System.Text.UTF8Encoding($false)))
+}
+# Called on every status poll. Records first_open and 7-day return (local only).
+function Track-OpenFunnel {
+    $cfg = Get-OptCfg
+    if (-not $cfg.enabled) { return }
+    $f = Get-FunnelState
+    $today = (Get-Date).ToString('yyyy-MM-dd')
+    if (-not $f.firstOpen) {
+        $f.firstOpen = $today
+        Record-OptEvent 'first_open' $true
+    }
+    if ($f.lastOpen -and $f.lastOpen -ne $today) {
+        $days = ((Get-Date) - [datetime]::ParseExact($f.lastOpen, 'yyyy-MM-dd', $null)).Days
+        if ($days -ge 7) { Record-OptEvent 'return_7d' $true }
+    }
+    $f.lastOpen = $today
+    Set-FunnelState $f
+}
 
 function Get-OptCfg {
     if (Test-Path -LiteralPath $script:OptCfgFile) {
@@ -162,7 +193,17 @@ try {
             }
 
             if ($method -eq 'GET' -and $path -eq '/api/status') {
-                Write-Response $stream 200 'application/json; charset=utf-8' (Json (Get-NGStatus))
+                Track-OpenFunnel
+                $st = Get-NGStatus
+                $f = Get-FunnelState
+                $stLocal = [pscustomobject]@{
+                    Version = $st.Version
+                    IsAdmin = $st.IsAdmin
+                    BlockedCount = $st.BlockedCount
+                    RuleCount = $st.RuleCount
+                    MonthBlockCount = [int]$f.blockCount
+                }
+                Write-Response $stream 200 'application/json; charset=utf-8' (Json $stLocal)
                 continue
             }
 
@@ -212,6 +253,45 @@ try {
                 continue
             }
 
+            if ($method -eq 'GET' -and $path -eq '/api/ai-suggest') {
+                try {
+                    $sug = @(Get-NGAISuggestions)
+                    $arr = if ($sug.Count -eq 0) { ,@() } else { $sug }
+                    Write-Response $stream 200 'application/json; charset=utf-8' (Json ([pscustomobject]@{ count = $sug.Count; apps = $arr }))
+                } catch {
+                    Write-Response $stream 500 'application/json; charset=utf-8' (Json @{ ok = $false; error = $_.Exception.Message })
+                }
+                continue
+            }
+
+            if ($method -eq 'POST' -and $path -eq '/api/ai-parse') {
+                $text = Get-BodyParam $req 'text'
+                if (-not $text) { Write-Response $stream 400 'application/json' (Json @{ ok = $false; error = 'MISSING_TEXT' }); continue }
+                try {
+                    $m = @(Get-NGNLParse -Text $text)
+                    $arr = if ($m.Count -eq 0) { ,@() } else { $m }
+                    Write-Response $stream 200 'application/json; charset=utf-8' (Json ([pscustomobject]@{ ok = $true; count = $m.Count; matches = $arr }))
+                } catch {
+                    Write-Response $stream 500 'application/json; charset=utf-8' (Json @{ ok = $false; error = $_.Exception.Message })
+                }
+                continue
+            }
+
+            if ($method -eq 'GET' -and $path -eq '/api/suggestions') {
+                try {
+                    $managed = @(Get-NGBlockedList | ForEach-Object { $_.Path.ToLowerInvariant() })
+                    $all = @(Get-NGDiscover)
+                    $running = @($all | Where-Object {
+                        $_.Source -eq 'running' -and $managed -notcontains $_.Path.ToLowerInvariant()
+                    } | Select-Object -First 8)
+                    $arr = if ($running.Count -eq 0) { ,@() } else { $running }
+                    Write-Response $stream 200 'application/json; charset=utf-8' (Json ([pscustomobject]@{ count = $running.Count; apps = $arr }))
+                } catch {
+                    Write-Response $stream 500 'application/json; charset=utf-8' (Json @{ ok = $false; error = $_.Exception.Message })
+                }
+                continue
+            }
+
             if ($method -eq 'GET' -and $path -eq '/api/discover') {
                 try {
                     $apps = @(Get-NGDiscover)
@@ -230,6 +310,17 @@ try {
                     $r = Add-NGBlock -Path $p
                     $good = ($r.Outbound -and $r.Inbound)
                     Record-OptEvent 'block' $good
+                    if ($good) {
+                        $f = Get-FunnelState
+                        $thisMonth = (Get-Date).ToString('yyyy-MM')
+                        if ($f.blockMonth -ne $thisMonth) { $f.blockMonth = $thisMonth; $f.blockCount = 0 }
+                        $f.blockCount = [int]$f.blockCount + 1
+                        if (-not $f.firstBlock) {
+                            $f.firstBlock = (Get-Date).ToString('yyyy-MM-dd')
+                            Record-OptEvent 'first_block' $true
+                        }
+                        Set-FunnelState $f
+                    }
                     Flush-OptEvents
                     Write-Response $stream 200 'application/json; charset=utf-8' (Json @{ ok = $good; path = $r.Path; outbound = $r.Outbound; inbound = $r.Inbound; errors = $r.Errors })
                 } catch {

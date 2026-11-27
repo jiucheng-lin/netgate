@@ -328,3 +328,63 @@ function Get-NGDiscover {
     $list = @($map.Values | Sort-Object -Property Name | Select-Object -First $Limit)
     return $list
 }
+
+# AI-assisted (local heuristic, no external API): score unmanaged running
+# programs by "background traffic" signals, return ranked candidates with reasons.
+function Get-NGAISuggestions {
+    param([int]$Limit = 6)
+    $managed = @(Get-NGBlockedList | ForEach-Object { $_.Path.ToLowerInvariant() })
+    $all = @(Get-NGDiscover)
+    $patterns = @(
+        @{ p = '(?i)(update|updater|auto.?update)'; s = 3; why = 'auto-update component' },
+        @{ p = '(?i)(sync|cloud|drive|backup)'; s = 3; why = 'cloud sync / backup' },
+        @{ p = '(?i)(launcher|helper|agent|service)'; s = 2; why = 'background helper' },
+        @{ p = '(?i)(telemetry|metric|report|analytics)'; s = 3; why = 'telemetry component' },
+        @{ p = '(?i)(game|steam|epic|xbox)'; s = 1; why = 'game client' }
+    )
+    $results = @()
+    foreach ($a in $all) {
+        if ($managed -contains $a.Path.ToLowerInvariant()) { continue }
+        if ($a.Source -ne 'running') { continue }
+        $score = 0; $why = @()
+        foreach ($r in $patterns) {
+            if ($a.Name -match $r.p -or $a.Path -match $r.p) {
+                $score += [int]$r.s; $why += $r.why
+            }
+        }
+        if ($score -gt 0) {
+            $results += [pscustomobject]@{
+                Path   = $a.Path
+                Name   = $a.Name
+                Score  = $score
+                Reason = ($why | Select-Object -Unique) -join ', '
+            }
+        }
+    }
+    return @($results | Sort-Object -Property Score -Descending | Select-Object -First $Limit)
+}
+
+# Parse a natural-language instruction like "把微信断网" / "block chrome"
+# and match against discovered programs. Local fuzzy match, no external AI.
+function Get-NGNLParse {
+    param([Parameter(Mandatory = $true)][string]$Text)
+    $clean = $Text.Trim()
+    $verbs = '(?i)(把|给|将|禁止|禁用|断网|关闭|阻止|block|disable|stop|ban|cut)'
+    $q = [regex]::Replace($clean, $verbs, ' ').Trim()
+    $q = [regex]::Replace($q, '\s+', ' ')
+    if ([string]::IsNullOrWhiteSpace($q)) { return @() }
+    $all = @(Get-NGDiscover)
+    $results = @()
+    foreach ($a in $all) {
+        $name = [string]$a.Name
+        $score = 0
+        if ($name.ToLowerInvariant() -eq $q.ToLowerInvariant()) { $score = 100 }
+        elseif ($name.ToLowerInvariant().IndexOf($q.ToLowerInvariant()) -ge 0) { $score = 60 }
+        elseif ($q.ToLowerInvariant().IndexOf($name.ToLowerInvariant()) -ge 0) { $score = 50 }
+        elseif ($name.ToLowerInvariant().Length -ge 3 -and $q.ToLowerInvariant().IndexOf($name.ToLowerInvariant().Substring(0,3)) -ge 0) { $score = 30 }
+        if ($score -gt 0) {
+            $results += [pscustomobject]@{ Path = $a.Path; Name = $a.Name; Score = $score; Source = $a.Source }
+        }
+    }
+    return @($results | Sort-Object -Property Score -Descending | Select-Object -First 5)
+}

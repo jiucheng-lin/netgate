@@ -37,6 +37,9 @@
 - **按程序管理**：只对你指定的 `.exe` 生效，不影响其他软件
 - **程序选择器**：自动列出正在运行和已安装的程序，点选即可，不用手打路径
 - **拖拽添加**：直接把 `.exe` 拖到页面上
+- **AI 辅助**：本地智能推荐后台程序、自然语言「把 XX 断网」自动匹配（不调用外部服务）
+- **首次引导**：三步内联引导，完成一次自动消失，无弹窗骚扰
+- **回访提示**：本月拦截次数统计、发现未管理的运行中程序会提醒
 - **双向拦截**：出站 + 入站规则同时生效
 - **批量操作**：扫描整个目录，勾选多个程序一起处理
 - **随时暂停/恢复**：规则可临时停用，不必删了重建
@@ -85,6 +88,10 @@
 - [docs/DEPLOY-ANALYTICS.md](docs/DEPLOY-ANALYTICS.md) — 部署统计后端（Cloudflare Worker）
 - [ops/repo-stats.ps1](ops/repo-stats.ps1) — 仓库运营数据报告脚本
 - [worker/](worker/) — 匿名统计收集端（Cloudflare Worker + KV）
+- [CHANGELOG.md](CHANGELOG.md) — 版本变更记录
+- [ops/dashboard.html](ops/dashboard.html) — 运营数据看板（本地打开，读 Worker stats）
+- [content/](content/) — 内容分发素材（B站脚本、知乎文章）
+- [docs/index.html](docs/index.html) — SEO 落地页（可挂 GitHub Pages）
 
 ### 运营数据
 

@@ -12,7 +12,8 @@
 
 const ALLOWED_EVENTS = new Set([
   'app_start', 'block', 'unblock', 'enable', 'disable',
-  'scan', 'export', 'import', 'reset', 'error'
+  'scan', 'export', 'import', 'reset', 'error',
+  'first_open', 'first_block', 'return_7d'
 ]);
 
 const CORS = {

@@ -12,7 +12,7 @@
 
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('status', 'list', 'discover', 'block', 'unblock', 'enable', 'disable', 'scan', 'export', 'import', 'reset')]
+    [ValidateSet('status', 'list', 'discover', 'ai-suggest', 'ai-parse', 'block', 'unblock', 'enable', 'disable', 'scan', 'export', 'import', 'reset')]
     [string]$Action,
     [string]$Path,
     [string]$Directory,
@@ -55,6 +55,17 @@ try {
             $apps = @(Get-NGDiscover)
             $arr = if ($apps.Count -eq 0) { ,@() } else { $apps }
             Out-Json ([pscustomobject]@{ count = $apps.Count; apps = $arr })
+        }
+        'ai-suggest' {
+            $sug = @(Get-NGAISuggestions)
+            $arr = if ($sug.Count -eq 0) { ,@() } else { $sug }
+            Out-Json ([pscustomobject]@{ count = $sug.Count; apps = $arr })
+        }
+        'ai-parse' {
+            if (-not $Path) { throw 'MISSING_PATH' }
+            $m = @(Get-NGNLParse -Text $Path)
+            $arr = if ($m.Count -eq 0) { ,@() } else { $m }
+            Out-Json ([pscustomobject]@{ count = $m.Count; matches = $arr })
         }
         'block' {
             if (-not $Path) { throw 'MISSING_PATH' }
