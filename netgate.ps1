@@ -12,7 +12,7 @@
 
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('status', 'list', 'block', 'unblock', 'enable', 'disable', 'scan', 'export', 'import', 'reset')]
+    [ValidateSet('status', 'list', 'discover', 'block', 'unblock', 'enable', 'disable', 'scan', 'export', 'import', 'reset')]
     [string]$Action,
     [string]$Path,
     [string]$Directory,
@@ -50,6 +50,11 @@ try {
         }
         'list' {
             Out-Json (Get-NGBlockedList)
+        }
+        'discover' {
+            $apps = @(Get-NGDiscover)
+            $arr = if ($apps.Count -eq 0) { ,@() } else { $apps }
+            Out-Json ([pscustomobject]@{ count = $apps.Count; apps = $arr })
         }
         'block' {
             if (-not $Path) { throw 'MISSING_PATH' }

@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-page-node-id="RYAr4wE7t3hd9RdfGHgXj4">
-<head data-page-node-id="CgTOLEdhenSbnoHPNglJ2Y">
-<meta charset="utf-8" data-page-node-id="aRKCmpjdEMUupLQ7bHXudE">
-<meta name="viewport" content="width=device-width, initial-scale=1" data-page-node-id="Jo67ORzOPqEFdkUMeLlRga">
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>NetGate - 应用联网管理</title>
 <style>
   :root {
@@ -13,22 +13,22 @@
   * { box-sizing: border-box; }
   body { margin: 0; font-family: "Microsoft YaHei", "Segoe UI", system-ui, sans-serif;
          background: var(--bg); color: var(--ink); font-size: 14px; }
-  header { background: var(--card); border-bottom: 1px solid var(--line); padding: 16px 24px;
+  header { background: var(--card); border-bottom: 1px solid var(--line); padding: 14px 24px;
            display: flex; align-items: center; justify-content: space-between; }
   header h1 { margin: 0; font-size: 20px; letter-spacing: .5px; }
   header h1 span { color: var(--accent); }
-  .badge { font-size: 12px; padding: 4px 10px; border-radius: 999px; background: var(--accent-soft);
-           color: var(--accent); }
+  .hd-right { display: flex; gap: 10px; align-items: center; }
+  .badge { font-size: 12px; padding: 4px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); }
   .badge.warn { background: #fef3c7; color: var(--warn); }
   .wrap { max-width: 1000px; margin: 24px auto; padding: 0 20px; }
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px;
           padding: 18px 20px; margin-bottom: 18px; }
   .card h2 { margin: 0 0 14px; font-size: 15px; }
   .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-  input[type=text] { flex: 1; min-width: 260px; padding: 9px 11px; border: 1px solid var(--line);
+  input[type=text] { flex: 1; min-width: 220px; padding: 9px 11px; border: 1px solid var(--line);
           border-radius: 6px; font-size: 13px; font-family: inherit; }
   button { padding: 9px 15px; border: 1px solid var(--line); border-radius: 6px; background: #fff;
-           cursor: pointer; font-size: 13px; font-family: inherit; color: var(--ink); }
+           cursor: pointer; font-size: 13px; font-family: inherit; color: var(--ink); white-space: nowrap; }
   button:hover { border-color: var(--accent); color: var(--accent); }
   button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
   button.primary:hover { background: #1d4ed8; color: #fff; }
@@ -36,8 +36,7 @@
   button:disabled { opacity: .5; cursor: not-allowed; }
   .hint { color: var(--muted); font-size: 12px; margin-top: 8px; line-height: 1.6; }
   table { width: 100%; border-collapse: collapse; }
-  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line);
-           font-size: 13px; word-break: break-all; }
+  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); font-size: 13px; word-break: break-all; }
   th { color: var(--muted); font-weight: 600; }
   .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; }
   .pill.on { background: #dcfce7; color: var(--ok); }
@@ -45,80 +44,169 @@
   .empty { color: var(--muted); text-align: center; padding: 26px; }
   .msg { margin-top: 10px; font-size: 13px; min-height: 18px; }
   .msg.ok { color: var(--ok); } .msg.err { color: var(--danger); }
-  .scanlist { margin-top: 10px; max-height: 220px; overflow: auto; border: 1px solid var(--line);
-              border-radius: 6px; padding: 6px; display: none; }
-  .scanlist label { display: block; padding: 5px 7px; border-radius: 4px; font-size: 12px; }
-  .scanlist label:hover { background: var(--bg); }
   .stats { display: flex; gap: 28px; }
   .stat b { display: block; font-size: 24px; color: var(--accent); }
   .stat span { color: var(--muted); font-size: 12px; }
+  .scanlist { margin-top: 10px; max-height: 240px; overflow: auto; border: 1px solid var(--line); border-radius: 6px; padding: 6px; display: none; }
+  .scanlist label { display: block; padding: 5px 7px; border-radius: 4px; font-size: 12px; }
+  .scanlist label:hover { background: var(--bg); }
+  /* modal */
+  .overlay { position: fixed; inset: 0; background: rgba(20,24,32,.45); display: none;
+             align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+  .overlay.show { display: flex; }
+  .modal { background: #fff; border-radius: 12px; width: 100%; max-width: 620px; max-height: 85vh;
+           display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,.2); }
+  .modal-head { padding: 18px 22px; border-bottom: 1px solid var(--line); display: flex;
+                align-items: center; justify-content: space-between; }
+  .modal-head h3 { margin: 0; font-size: 16px; }
+  .modal-body { padding: 18px 22px; overflow: auto; }
+  .modal-foot { padding: 14px 22px; border-top: 1px solid var(--line); display: flex;
+                justify-content: flex-end; gap: 10px; }
+  .x { border: none; background: none; font-size: 20px; color: var(--muted); cursor: pointer; padding: 0 4px; }
+  .picker-search { width: 100%; margin-bottom: 10px; }
+  .picker-list { max-height: 420px; overflow: auto; border: 1px solid var(--line); border-radius: 6px; }
+  .picker-item { padding: 10px 12px; border-bottom: 1px solid var(--line); cursor: pointer; display: flex;
+                 align-items: center; gap: 10px; }
+  .picker-item:last-child { border-bottom: none; }
+  .picker-item:hover { background: var(--accent-soft); }
+  .picker-item .nm { font-weight: 600; font-size: 13px; }
+  .picker-item .pt { color: var(--muted); font-size: 11px; word-break: break-all; }
+  .src-tag { font-size: 10px; padding: 1px 6px; border-radius: 4px; background: #f3f4f6; color: var(--muted); white-space: nowrap; }
+  .src-tag.running { background: #dcfce7; color: var(--ok); }
+  .src-tag.installed { background: #dbeafe; color: var(--accent); }
+  .toggle-row { display: flex; align-items: center; justify-content: space-between;
+                padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .toggle-row:last-child { border-bottom: none; }
+  .switch { position: relative; width: 42px; height: 24px; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider { position: absolute; inset: 0; background: #cbd5e1; border-radius: 24px; cursor: pointer; transition: .2s; }
+  .slider:before { content: ""; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px;
+                   background: #fff; border-radius: 50%; transition: .2s; }
+  .switch input:checked + .slider { background: var(--accent); }
+  .switch input:checked + .slider:before { transform: translateX(18px); }
+  .field { margin: 12px 0; }
+  .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; }
+  .field input { width: 100%; padding: 9px 11px; border: 1px solid var(--line); border-radius: 6px; font-size: 13px; }
   footer { text-align: center; color: var(--muted); font-size: 12px; padding: 20px; }
+  .dragover { outline: 2px dashed var(--accent); outline-offset: -6px; background: var(--accent-soft); }
 </style>
 </head>
-<body data-page-node-id="hTlgIriBfUCGwHdEdsaJft">
-<header data-page-node-id="TXuLgeyrDl7v6Ue8sEKJiF">
-  <h1 data-page-node-id="V1XkSsCO7y4UlNMJB0bKr0"><span data-page-node-id="by95s8bYJHw15gpjFZ2HCN">Net</span>Gate <small style="font-size:12px;color:var(--muted);font-weight:400" data-page-node-id="Oo80QCNcevn27XrWCt7vi1">应用联网管理</small></h1>
-  <div data-page-node-id="tHeifNFXG6LcfeC4LtBdXC">
-    <span class="badge" id="adminBadge" data-page-node-id="3wvARhhyGWBLIgMLZGhceU">检测中...</span>
+<body>
+<header>
+  <h1><span>Net</span>Gate <small style="font-size:12px;color:var(--muted);font-weight:400">应用联网管理</small></h1>
+  <div class="hd-right">
+    <span class="badge" id="adminBadge">检测中...</span>
+    <button id="btnSettings">设置</button>
   </div>
 </header>
 
-<div class="wrap" data-page-node-id="XO2lO7tli2bJghQHSBNYsW">
-  <div class="card" data-page-node-id="mdicfS5bMYkBArbW5XE8U1">
-    <h2 data-page-node-id="S4gCg640yDEsiJukE4FgFO">状态</h2>
-    <div class="stats" data-page-node-id="zkFNlHjvkiWlIFB29IHvC8">
-      <div class="stat" data-page-node-id="UjYQRAgfFllMjHtIHbgl8L"><b id="sBlocked" data-page-node-id="C7WE2SwsokPtuFLSB3oIDv">-</b><span data-page-node-id="GQBzeBRr7qjYbubN0rTQ7i">已管理程序</span></div>
-      <div class="stat" data-page-node-id="rUBj55LiUJKS8yIdG716BL"><b id="sRules" data-page-node-id="s7AA9C9bD6JjH17FikOdUY">-</b><span data-page-node-id="O1rjByQaQTxHR9QMZH6I9M">防火墙规则</span></div>
-      <div class="stat" data-page-node-id="0X9MuDJyEr7S6NLAzl4zAG"><b id="sVersion" data-page-node-id="JvfhxEVNaKX0FfbLLMYP8Q">-</b><span data-page-node-id="g0XWhsHL3Per9IK1CFf9Fj">版本</span></div>
+<div class="wrap" id="dropZone">
+  <div class="card">
+    <h2>状态</h2>
+    <div class="stats">
+      <div class="stat"><b id="sBlocked">-</b><span>已管理程序</span></div>
+      <div class="stat"><b id="sRules">-</b><span>防火墙规则</span></div>
+      <div class="stat"><b id="sVersion">-</b><span>版本</span></div>
     </div>
   </div>
 
-  <div class="card" data-page-node-id="CZFjj1QYjqNvnwKcAKwZEz">
-    <h2 data-page-node-id="Bv1QYMdCHac9LkeLSQVJKO">添加程序</h2>
-    <div class="row" data-page-node-id="4ejIsL1HJkf2UFBfxZqVcF">
-      <input type="text" id="exePath" placeholder="输入 .exe 完整路径，例如 C:\Apps\app.exe" data-page-node-id="dl2Ak6W6dEedYyxZ1bSETF">
-      <button class="primary" id="btnBlock" data-page-node-id="vrdbeQyBKgrYUiMtDnz9cg">禁止联网</button>
+  <div class="card">
+    <h2>添加程序</h2>
+    <div class="row">
+      <input type="text" id="exePath" placeholder="输入 .exe 路径，或点「从列表选择」">
+      <button id="btnPick">从列表选择</button>
+      <button class="primary" id="btnBlock">禁止联网</button>
     </div>
-    <div class="msg" id="addMsg" data-page-node-id="UBSDbSmzFvc6efOUQEcmL3"></div>
-    <div class="hint" data-page-node-id="gOaylMuIr3spkY967p5caB">只对指定的单个程序生效，不影响其他软件，也不改动系统默认网络设置。</div>
+    <div class="msg" id="addMsg"></div>
+    <div class="hint">也可以直接把 .exe 文件拖到本页面。只对指定程序生效，不影响其他软件。</div>
   </div>
 
-  <div class="card" data-page-node-id="69xIooHUbgB8Y5pqG7EuRV">
-    <h2 data-page-node-id="Zs4DngmMBpjUNnYC3fF8Bb">从目录批量选择</h2>
-    <div class="row" data-page-node-id="gReJwJPQkhrUKptP8bgEoa">
-      <input type="text" id="scanDir" placeholder="输入目录路径，例如 C:\Apps" data-page-node-id="8rYH0L1ACIYsqyPoH2PJjE">
-      <label style="font-size:13px" data-page-node-id="ArPVlaMD3bsDqyDquJTHkk"><input type="checkbox" id="scanRecurse" data-page-node-id="z8kuCHVxm2pqpT7ZC7JIBE"> 包含子目录</label>
-      <button id="btnScan" data-page-node-id="9TFVK2NliG5mdKEfb4gME5">扫描</button>
+  <div class="card">
+    <h2>从目录批量选择</h2>
+    <div class="row">
+      <input type="text" id="scanDir" placeholder="输入目录路径，例如 C:\Apps">
+      <label style="font-size:13px"><input type="checkbox" id="scanRecurse"> 包含子目录</label>
+      <button id="btnScan">扫描</button>
     </div>
-    <div class="scanlist" id="scanList" data-page-node-id="Pakq8B8VFkiyYXdSsdBsod"></div>
-    <div class="row" style="margin-top:10px; display:none" id="scanActions" data-page-node-id="x9lkZ8NfMcC56kZSfBWBGw">
-      <button class="primary" id="btnBlockSelected" data-page-node-id="M2nOZAZzAq4t39jWQ0io8Y">禁止选中的程序</button>
+    <div class="scanlist" id="scanList"></div>
+    <div class="row" style="margin-top:10px; display:none" id="scanActions">
+      <button class="primary" id="btnBlockSelected">禁止选中的程序</button>
     </div>
-    <div class="msg" id="scanMsg" data-page-node-id="Ivjdn57lHHlIax2Y8Y0ByD"></div>
+    <div class="msg" id="scanMsg"></div>
   </div>
 
-  <div class="card" data-page-node-id="G4IRm1XAnXBQdmwMnmvVvE">
-    <h2 data-page-node-id="ZO2m6er6NJp9x1Zk1TAFUk">已管理程序</h2>
-    <table data-page-node-id="i3iRfQqujSBANr4La6vDcn">
-      <thead data-page-node-id="Ul4cCAsaG7GtMoLSBWdBOB"><tr data-page-node-id="zA2IpuylwKwO1zfyN35j9i"><th data-page-node-id="ORc05DvFO3bLirk3eLY5ra">程序路径</th><th data-page-node-id="luRg4URMPOF223au2pRaAM">出站</th><th data-page-node-id="zSOD853DtY0YoiAyuJii9b">入站</th><th data-page-node-id="Kb98ZaDOHVd20NvbStH7u7">状态</th><th data-page-node-id="JK1KV7oH0RIVcda53EoW11">操作</th></tr></thead>
-      <tbody id="ruleBody" data-page-node-id="7kaJA1SSiZqnfxzXmpGJoX"></tbody>
+  <div class="card">
+    <h2>已管理程序</h2>
+    <table>
+      <thead><tr><th>程序路径</th><th>出站</th><th>入站</th><th>状态</th><th>操作</th></tr></thead>
+      <tbody id="ruleBody"></tbody>
     </table>
-    <div class="empty" id="emptyHint" style="display:none" data-page-node-id="zC0QZQRH0u9kTKHlbXimW7">还没有管理任何程序</div>
+    <div class="empty" id="emptyHint" style="display:none">还没有管理任何程序</div>
   </div>
 
-  <div class="card" data-page-node-id="iUdFOWepbgs7WdQ2uaCnQz">
-    <h2 data-page-node-id="tTWxCwZruenywWum9Kncsl">备份与恢复</h2>
-    <div class="row" data-page-node-id="tHf6g2HYedtmWMDbEDbD9c">
-      <button id="btnExport" data-page-node-id="Uk4rCim5ZhFkcFcId3qw7c">导出配置</button>
-      <button id="btnImport" data-page-node-id="qtbatQ3QdBmme7NvYqlIxV">导入配置</button>
-      <input type="file" id="importFile" accept=".json" style="display:none" data-page-node-id="ccPFP6FNEHMAHHwhGumIIn">
-      <button class="danger" id="btnReset" data-page-node-id="FeMC81z8vxreXeXII5jnoH">清除全部规则</button>
+  <div class="card">
+    <h2>备份与恢复</h2>
+    <div class="row">
+      <button id="btnExport">导出配置</button>
+      <button id="btnImport">导入配置</button>
+      <input type="file" id="importFile" accept=".json" style="display:none">
+      <button class="danger" id="btnReset">清除全部规则</button>
     </div>
-    <div class="msg" id="ioMsg" data-page-node-id="5huGsIDWYQmmuXOOvS7GcO"></div>
+    <div class="msg" id="ioMsg"></div>
   </div>
 </div>
 
-<footer data-page-node-id="vZOqPJ0mxBVwBPnWCT7V9H">NetGate · 本地运行，仅监听 127.0.0.1 · 通用工具，不含任何软件名单</footer>
+<footer>NetGate · 本地运行，仅监听 127.0.0.1 · 通用工具，不含任何软件名单</footer>
+
+<!-- Program picker -->
+<div class="overlay" id="pickOverlay">
+  <div class="modal">
+    <div class="modal-head"><h3>选择程序</h3><button class="x" id="pickClose">&times;</button></div>
+    <div class="modal-body">
+      <input type="text" class="picker-search" id="pickSearch" placeholder="输入名称或路径搜索...">
+      <div class="picker-list" id="pickList"><div class="empty">加载中...</div></div>
+    </div>
+    <div class="modal-foot"><button id="pickCancel">取消</button></div>
+  </div>
+</div>
+
+<!-- Settings -->
+<div class="overlay" id="setOverlay">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-head"><h3>设置</h3><button class="x" id="setClose">&times;</button></div>
+    <div class="modal-body">
+      <h4 style="margin:0 0 6px;font-size:14px">匿名使用统计</h4>
+      <div class="hint" style="margin:0 0 10px">默认关闭。开启后只上报功能使用次数（如「禁止联网 1 次」），不含任何程序路径、文件名、用户名或 IP。随时可关闭并清除本地数据。</div>
+      <div class="toggle-row">
+        <div><b>发送匿名统计</b><div class="hint" id="teleState">当前：关闭</div></div>
+        <label class="switch"><input type="checkbox" id="teleToggle"><span class="slider"></span></label>
+      </div>
+      <div class="field" id="endpointField" style="display:none">
+        <label>统计服务地址（/ingest 端点）</label>
+        <input type="text" id="teleEndpoint" placeholder="https://your-worker.workers.dev/ingest">
+      </div>
+      <div class="row" id="teleSaveRow" style="display:none;margin-top:10px">
+        <button class="primary" id="teleSave">保存设置</button>
+      </div>
+    </div>
+    <div class="modal-foot"><button id="setDone">完成</button></div>
+  </div>
+</div>
+
+<!-- First-run consent -->
+<div class="overlay show" id="consentOverlay">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-head"><h3>欢迎使用 NetGate</h3></div>
+    <div class="modal-body">
+      <p style="line-height:1.8;margin:0 0 12px">NetGate 是一个通用的程序联网管理工具，不含任何软件名单，也不默认收集数据。</p>
+      <p style="line-height:1.8;margin:0">是否愿意发送<strong>匿名功能使用统计</strong>，帮助改进这个工具？只统计「用了哪些功能、各多少次」，<strong>不包含</strong>程序路径、文件名、用户名或 IP。可以随时在「设置」里关闭。</p>
+    </div>
+    <div class="modal-foot">
+      <button id="consentNo">不用，谢谢</button>
+      <button class="primary" id="consentYes">帮助改进</button>
+    </div>
+  </div>
+</div>
 
 <script>
 function $(id) { return document.getElementById(id); }
@@ -133,6 +221,15 @@ function api(url, method, body) {
   }
   return fetch(url, opt).then(function(r){ return r.json(); });
 }
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+function attr(s) { return escapeHtml(s); }
+
+var consentKey = 'netgate_consent_v1';
+var pickCache = null;
 
 function refreshStatus() {
   api('/api/status', 'GET').then(function(d){
@@ -144,16 +241,13 @@ function refreshStatus() {
     else { b.textContent = '非管理员 · 写入将失败'; b.className = 'badge warn'; }
   });
 }
-
 function refreshList() {
   api('/api/list', 'GET').then(function(list){
     var body = $('ruleBody'); body.innerHTML = '';
     $('emptyHint').style.display = list.length ? 'none' : 'block';
     list.forEach(function(item){
       var tr = document.createElement('tr');
-      var state = item.Enabled
-        ? '<span class="pill on">生效中</span>'
-        : '<span class="pill off">已暂停</span>';
+      var state = item.Enabled ? '<span class="pill on">生效中</span>' : '<span class="pill off">已暂停</span>';
       var toggle = item.Enabled ? '暂停' : '恢复';
       tr.innerHTML =
         '<td>' + escapeHtml(item.Path) + '</td>' +
@@ -161,21 +255,16 @@ function refreshList() {
         '<td>' + (item.Inbound ? '是' : '-') + '</td>' +
         '<td>' + state + '</td>' +
         '<td>' +
-          '<button data-act="toggle" data-hash="' + item.Hash + '" data-path="' + escapeAttr(item.Path) + '">' + toggle + '</button> ' +
-          '<button class="danger" data-act="del" data-path="' + escapeAttr(item.Path) + '">解除</button>' +
+          '<button data-act="toggle" data-path="' + attr(item.Path) + '">' + toggle + '</button> ' +
+          '<button class="danger" data-act="del" data-path="' + attr(item.Path) + '">解除</button>' +
         '</td>';
       body.appendChild(tr);
     });
   });
 }
+function refreshAll() { refreshStatus(); refreshList(); }
 
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, function(c){
-    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
-  });
-}
-function escapeAttr(s) { return escapeHtml(s); }
-
+// ---- Add program ----
 $('btnBlock').onclick = function(){
   var p = $('exePath').value.trim();
   if (!p) { setMsg('addMsg', '请输入程序路径', false); return; }
@@ -186,6 +275,64 @@ $('btnBlock').onclick = function(){
   }).catch(function(e){ setMsg('addMsg', '请求失败：'+e, false); });
 };
 
+// ---- Program picker ----
+function openPicker() {
+  $('pickOverlay').classList.add('show');
+  $('pickSearch').value = '';
+  if (!pickCache) {
+    api('/api/discover', 'GET').then(function(list){
+      pickCache = Array.isArray(list) ? list : [];
+      renderPicker('');
+    }).catch(function(){ renderPicker(''); });
+  } else {
+    renderPicker('');
+  }
+}
+function renderPicker(q) {
+  q = (q || '').toLowerCase();
+  var items = (pickCache || []).filter(function(x){
+    return !q || (x.Name || '').toLowerCase().indexOf(q) >= 0 || (x.Path || '').toLowerCase().indexOf(q) >= 0;
+  });
+  var box = $('pickList');
+  if (!items.length) { box.innerHTML = '<div class="empty">没有匹配的程序</div>'; return; }
+  box.innerHTML = '';
+  items.forEach(function(x){
+    var d = document.createElement('div');
+    d.className = 'picker-item';
+    var tagCls = 'src-tag ' + (x.Source || '');
+    var tagTxt = x.Source === 'running' ? '运行中' : (x.Source === 'installed' ? '已安装' : '程序目录');
+    d.innerHTML = '<div style="flex:1"><div class="nm">' + escapeHtml(x.Name) + '</div>' +
+                  '<div class="pt">' + escapeHtml(x.Path) + '</div></div>' +
+                  '<span class="' + tagCls + '">' + tagTxt + '</span>';
+    d.onclick = function(){
+      $('exePath').value = x.Path;
+      $('pickOverlay').classList.remove('show');
+      setMsg('addMsg', '已选择：' + x.Name, true);
+    };
+    box.appendChild(d);
+  });
+}
+$('btnPick').onclick = openPicker;
+$('pickClose').onclick = function(){ $('pickOverlay').classList.remove('show'); };
+$('pickCancel').onclick = function(){ $('pickOverlay').classList.remove('show'); };
+$('pickSearch').oninput = function(){ renderPicker(this.value); };
+
+// ---- Drag and drop ----
+var dz = $('dropZone');
+['dragenter','dragover'].forEach(function(ev){
+  dz.addEventListener(ev, function(e){ e.preventDefault(); dz.classList.add('dragover'); });
+});
+['dragleave','drop'].forEach(function(ev){
+  dz.addEventListener(ev, function(e){ e.preventDefault(); dz.classList.remove('dragover'); });
+});
+dz.addEventListener('drop', function(e){
+  var files = e.dataTransfer.files;
+  if (!files || !files.length) return;
+  var p = files[0].path || files[0].name;
+  if (p) { $('exePath').value = p; setMsg('addMsg', '已拖入：' + files[0].name, true); }
+});
+
+// ---- Batch scan ----
 $('btnScan').onclick = function(){
   var d = $('scanDir').value.trim();
   if (!d) { setMsg('scanMsg', '请输入目录路径', false); return; }
@@ -195,7 +342,7 @@ $('btnScan').onclick = function(){
     var box = $('scanList'); box.innerHTML = '';
     r.paths.forEach(function(p){
       var label = document.createElement('label');
-      label.innerHTML = '<input type="checkbox" value="' + escapeAttr(p) + '"> ' + escapeHtml(p);
+      label.innerHTML = '<input type="checkbox" value="' + attr(p) + '"> ' + escapeHtml(p);
       box.appendChild(label);
     });
     box.style.display = r.paths.length ? 'block' : 'none';
@@ -203,14 +350,11 @@ $('btnScan').onclick = function(){
     setMsg('scanMsg', '找到 ' + r.count + ' 个程序', true);
   }).catch(function(e){ setMsg('scanMsg', '请求失败：'+e, false); });
 };
-
 $('btnBlockSelected').onclick = function(){
   var checks = $('scanList').querySelectorAll('input:checked');
   if (!checks.length) { setMsg('scanMsg', '请先勾选程序', false); return; }
-  var paths = [];
-  checks.forEach(function(c){ paths.push(c.value); });
+  var paths = []; checks.forEach(function(c){ paths.push(c.value); });
   var done = 0, fail = 0;
-  setMsg('scanMsg', '处理 0/' + paths.length, true);
   paths.forEach(function(p){
     api('/api/block', 'POST', { path: p }).then(function(d){
       if (d.ok) done++; else fail++;
@@ -223,6 +367,7 @@ $('btnBlockSelected').onclick = function(){
   });
 };
 
+// ---- Rule actions ----
 $('ruleBody').addEventListener('click', function(e){
   var b = e.target.closest('button'); if (!b) return;
   var act = b.getAttribute('data-act'), p = b.getAttribute('data-path');
@@ -235,17 +380,16 @@ $('ruleBody').addEventListener('click', function(e){
   }
 });
 
+// ---- Export / Import / Reset ----
 $('btnExport').onclick = function(){
   api('/api/export', 'POST', {}).then(function(d){
     var blob = new Blob([JSON.stringify(d, null, 2)], {type:'application/json'});
     var a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'netgate-rules.json';
-    a.click(); URL.revokeObjectURL(a.href);
+    a.href = URL.createObjectURL(blob); a.download = 'netgate-rules.json'; a.click();
+    URL.revokeObjectURL(a.href);
     setMsg('ioMsg', '配置已导出', true);
   });
 };
-
 $('btnImport').onclick = function(){ $('importFile').click(); };
 $('importFile').onchange = function(){
   var f = this.files[0]; if (!f) return;
@@ -260,15 +404,56 @@ $('importFile').onchange = function(){
   };
   reader.readAsText(f);
 };
-
 $('btnReset').onclick = function(){
   if (!confirm('确认清除 NetGate 创建的全部规则？此操作不影响其他软件的防火墙设置。')) return;
-  api('/api/reset', 'POST', {}).then(function(d){
-    setMsg('ioMsg', '已清除 ' + d.removed + ' 条规则', true); refreshAll();
+  api('/api/reset', 'POST', {}).then(function(d){ setMsg('ioMsg', '已清除 ' + d.removed + ' 条规则', true); refreshAll(); });
+};
+
+// ---- Settings / telemetry ----
+function refreshTelemetry() {
+  api('/api/telemetry/status', 'GET').then(function(d){
+    $('teleToggle').checked = !!d.enabled;
+    $('teleState').textContent = '当前：' + (d.enabled ? '开启' : '关闭') + '（待发送 ' + d.queued + ' 条）';
+    $('endpointField').style.display = d.enabled ? 'block' : 'none';
+    $('teleSaveRow').style.display = d.enabled ? 'flex' : 'none';
+  });
+}
+$('btnSettings').onclick = function(){ $('setOverlay').classList.add('show'); refreshTelemetry(); };
+$('setClose').onclick = function(){ $('setOverlay').classList.remove('show'); };
+$('setDone').onclick = function(){ $('setOverlay').classList.remove('show'); };
+$('teleToggle').onchange = function(){
+  if (!this.checked) {
+    api('/api/telemetry/optout', 'POST', {}).then(function(){ refreshTelemetry(); });
+  } else {
+    $('endpointField').style.display = 'block';
+    $('teleSaveRow').style.display = 'flex';
+  }
+};
+$('teleSave').onclick = function(){
+  var ep = $('teleEndpoint').value.trim();
+  if (!ep) { alert('请填写统计服务地址'); return; }
+  api('/api/telemetry/optin', 'POST', { endpoint: ep }).then(function(d){
+    if (d.ok) { refreshTelemetry(); $('setOverlay').classList.remove('show'); }
   });
 };
 
-function refreshAll() { refreshStatus(); refreshList(); }
+// ---- First-run consent ----
+(function initConsent(){
+  $('consentOverlay').style.display = localStorage.getItem(consentKey) ? 'none' : 'flex';
+})();
+$('consentNo').onclick = function(){
+  localStorage.setItem(consentKey, 'declined');
+  $('consentOverlay').classList.remove('show');
+  refreshAll();
+};
+$('consentYes').onclick = function(){
+  localStorage.setItem(consentKey, 'accepted');
+  $('consentOverlay').classList.remove('show');
+  $('setOverlay').classList.add('show');
+  refreshTelemetry();
+  refreshAll();
+};
+
 refreshAll();
 </script>
 </body>

@@ -65,6 +65,71 @@ function Json($obj) {
     return (ConvertTo-Json -InputObject $obj -Depth 10 -Compress)
 }
 
+# ---- Optional telemetry (same storage as ops/telemetry.ps1) ----
+$script:OptCfgFile = Join-Path $env:LOCALAPPDATA 'NetGate\telemetry.json'
+$script:OptQueueFile = Join-Path $env:LOCALAPPDATA 'NetGate\telemetry-queue.jsonl'
+$script:OptVersion = '1.0.0'
+
+function Get-OptCfg {
+    if (Test-Path -LiteralPath $script:OptCfgFile) {
+        try {
+            $raw = [System.IO.File]::ReadAllText($script:OptCfgFile)
+            return ($raw | ConvertFrom-Json)
+        } catch {}
+    }
+    return [pscustomobject]@{ enabled = $false; anonId = ''; endpoint = '' }
+}
+
+function Set-OptCfg($cfg) {
+    $dir = Split-Path -Parent $script:OptCfgFile
+    if (-not (Test-Path -LiteralPath $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
+    $j = ConvertTo-Json -InputObject $cfg -Depth 4 -Compress
+    [System.IO.File]::WriteAllText($script:OptCfgFile, $j, (New-Object System.Text.UTF8Encoding($false)))
+}
+
+function Get-OsVersion {
+    $os = Get-CimInstance Win32_OperatingSystem -ErrorAction SilentlyContinue
+    if ($os) { return "$($os.MajorVersion).$($os.MinorVersion).$($os.BuildNumber)" }
+    return 'unknown'
+}
+
+function Record-OptEvent([string]$name, [bool]$success) {
+    $cfg = Get-OptCfg
+    if (-not $cfg.enabled) { return }
+    if (-not $cfg.anonId) {
+        $cfg.anonId = [guid]::NewGuid().ToString('N')
+        Set-OptCfg $cfg
+    }
+    $evt = [pscustomobject]@{
+        v = $script:OptVersion
+        id = $cfg.anonId
+        e = $name
+        t = [int][double]::Parse((Get-Date -UFormat %s))
+        os = Get-OsVersion
+        r = if ($success) { 1 } else { 0 }
+    }
+    $line = ConvertTo-Json -InputObject $evt -Depth 4 -Compress
+    $dir = Split-Path -Parent $script:OptQueueFile
+    if (-not (Test-Path -LiteralPath $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
+    [System.IO.File]::AppendAllText($script:OptQueueFile, $line + "`n", (New-Object System.Text.UTF8Encoding($false)))
+}
+
+function Flush-OptEvents {
+    $cfg = Get-OptCfg
+    if (-not $cfg.enabled -or -not $cfg.endpoint) { return }
+    if (-not (Test-Path -LiteralPath $script:OptQueueFile)) { return }
+    $lines = @(Get-Content -LiteralPath $script:OptQueueFile -ErrorAction SilentlyContinue | Where-Object { $_.Trim() })
+    if ($lines.Count -eq 0) { return }
+    $batch = '[' + ($lines -join ',') + ']'
+    try {
+        Invoke-RestMethod -Uri $cfg.endpoint -Method Post -Body $batch `
+            -ContentType 'application/json' -TimeoutSec 10 -ErrorAction Stop | Out-Null
+        Remove-Item -LiteralPath $script:OptQueueFile -Force -ErrorAction SilentlyContinue
+    } catch {
+        # keep queue for retry
+    }
+}
+
 function Get-BodyParam($req, [string]$key) {
     if (-not $req.Body) { return $null }
     try {
@@ -108,13 +173,67 @@ try {
                 continue
             }
 
+            if ($method -eq 'GET' -and $path -eq '/api/telemetry/status') {
+                $cfg = Get-OptCfg
+                $q = 0
+                if (Test-Path -LiteralPath $script:OptQueueFile) {
+                    $q = @(Get-Content -LiteralPath $script:OptQueueFile -ErrorAction SilentlyContinue | Where-Object { $_.Trim() }).Count
+                }
+                Write-Response $stream 200 'application/json; charset=utf-8' (Json ([pscustomobject]@{
+                    enabled = [bool]$cfg.enabled
+                    endpointSet = [bool]$cfg.endpoint
+                    queued = $q
+                }))
+                continue
+            }
+
+            if ($method -eq 'POST' -and $path -eq '/api/telemetry/optin') {
+                $ep = Get-BodyParam $req 'endpoint'
+                if (-not $ep) { Write-Response $stream 400 'application/json' (Json @{ ok = $false; error = 'ENDPOINT_REQUIRED' }); continue }
+                $cfg = Get-OptCfg
+                $cfg.enabled = $true
+                $cfg.endpoint = $ep
+                if (-not $cfg.anonId) { $cfg.anonId = [guid]::NewGuid().ToString('N') }
+                Set-OptCfg $cfg
+                Write-Response $stream 200 'application/json; charset=utf-8' (Json @{ ok = $true })
+                continue
+            }
+
+            if ($method -eq 'POST' -and $path -eq '/api/telemetry/optout') {
+                $cfg = Get-OptCfg
+                $cfg.enabled = $false
+                $cfg.anonId = ''
+                $cfg.endpoint = ''
+        Set-OptCfg $cfg
+        if (Test-Path -LiteralPath $script:OptQueueFile) {
+            [System.IO.File]::WriteAllText($script:OptQueueFile, '', (New-Object System.Text.UTF8Encoding($false)))
+        }
+        Write-Response $stream 200 'application/json; charset=utf-8' (Json @{ ok = $true })
+                continue
+            }
+
+            if ($method -eq 'GET' -and $path -eq '/api/discover') {
+                try {
+                    $apps = @(Get-NGDiscover)
+                    $payload = if ($apps.Count -eq 0) { '[]' } else { Json $apps }
+                    Write-Response $stream 200 'application/json; charset=utf-8' $payload
+                } catch {
+                    Write-Response $stream 500 'application/json; charset=utf-8' (Json @{ ok = $false; error = $_.Exception.Message })
+                }
+                continue
+            }
+
             if ($method -eq 'POST' -and $path -eq '/api/block') {
                 $p = Get-BodyParam $req 'path'
                 if (-not $p) { Write-Response $stream 400 'application/json' (Json @{ ok = $false; error = 'MISSING_PATH' }); continue }
                 try {
                     $r = Add-NGBlock -Path $p
-                    Write-Response $stream 200 'application/json; charset=utf-8' (Json @{ ok = ($r.Outbound -and $r.Inbound); path = $r.Path; outbound = $r.Outbound; inbound = $r.Inbound; errors = $r.Errors })
+                    $good = ($r.Outbound -and $r.Inbound)
+                    Record-OptEvent 'block' $good
+                    Flush-OptEvents
+                    Write-Response $stream 200 'application/json; charset=utf-8' (Json @{ ok = $good; path = $r.Path; outbound = $r.Outbound; inbound = $r.Inbound; errors = $r.Errors })
                 } catch {
+                    Record-OptEvent 'block' $false
                     Write-Response $stream 500 'application/json; charset=utf-8' (Json @{ ok = $false; error = $_.Exception.Message })
                 }
                 continue
@@ -125,8 +244,11 @@ try {
                 if (-not $p) { Write-Response $stream 400 'application/json' (Json @{ ok = $false; error = 'MISSING_PATH' }); continue }
                 try {
                     $n = Remove-NGBlock -Path $p
+                    Record-OptEvent 'unblock' $true
+                    Flush-OptEvents
                     Write-Response $stream 200 'application/json; charset=utf-8' (Json @{ ok = $true; removed = $n })
                 } catch {
+                    Record-OptEvent 'unblock' $false
                     Write-Response $stream 500 'application/json; charset=utf-8' (Json @{ ok = $false; error = $_.Exception.Message })
                 }
                 continue
@@ -138,6 +260,9 @@ try {
                 try {
                     $en = ($path -eq '/api/enable')
                     $n = Set-NGBlockState -Path $p -Enabled $en
+                    $ev = if ($en) { 'enable' } else { 'disable' }
+                    Record-OptEvent $ev $true
+                    Flush-OptEvents
                     Write-Response $stream 200 'application/json; charset=utf-8' (Json @{ ok = $true; affected = $n })
                 } catch {
                     Write-Response $stream 500 'application/json; charset=utf-8' (Json @{ ok = $false; error = $_.Exception.Message })
@@ -152,6 +277,8 @@ try {
                     $rec = $false
                     if ($req.Body) { $o = $req.Body | ConvertFrom-Json; $rec = [bool]$o.recurse }
                     $list = @(Get-NGScan -Directory $d -Recurse:$rec)
+                    Record-OptEvent 'scan' $true
+                    Flush-OptEvents
                     $arr = if ($list.Count -eq 0) { ,@() } else { $list }
                     Write-Response $stream 200 'application/json; charset=utf-8' (Json @{ ok = $true; count = $list.Count; paths = $arr })
                 } catch {
@@ -168,6 +295,8 @@ try {
                         exported = (Get-Date).ToString('o')
                         rules = @($list | ForEach-Object { [ordered]@{ path = $_.Path; enabled = [bool]$_.Enabled } })
                     }
+                    Record-OptEvent 'export' $true
+                    Flush-OptEvents
                     Write-Response $stream 200 'application/json; charset=utf-8' (Json $obj)
                 } catch {
                     Write-Response $stream 500 'application/json; charset=utf-8' (Json @{ ok = $false; error = $_.Exception.Message })
@@ -181,6 +310,8 @@ try {
                 try {
                     [System.IO.File]::WriteAllText($tmp, $req.Body, (New-Object System.Text.UTF8Encoding($false)))
                     $r = Import-NGRules -Path $tmp
+                    Record-OptEvent 'import' $true
+                    Flush-OptEvents
                     Write-Response $stream 200 'application/json; charset=utf-8' (Json @{ ok = $true; added = $r.Added; skipped = $r.Skipped; errors = $r.Errors })
                 } catch {
                     Write-Response $stream 500 'application/json; charset=utf-8' (Json @{ ok = $false; error = $_.Exception.Message })
@@ -193,6 +324,8 @@ try {
             if ($method -eq 'POST' -and $path -eq '/api/reset') {
                 try {
                     $n = Reset-NGRules
+                    Record-OptEvent 'reset' $true
+                    Flush-OptEvents
                     Write-Response $stream 200 'application/json; charset=utf-8' (Json @{ ok = $true; removed = $n })
                 } catch {
                     Write-Response $stream 500 'application/json; charset=utf-8' (Json @{ ok = $false; error = $_.Exception.Message })

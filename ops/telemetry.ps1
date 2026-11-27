@@ -85,7 +85,7 @@ switch ($Action) {
             hasId        = [bool]$cfg.anonId
             endpointSet  = [bool]$cfg.endpoint
             queuedEvents = $qCount
-            note         = 'Telemetry is off by default. No data leaves this machine unless enabled.'
+            note         = if ($cfg.enabled) { 'Telemetry is on. Only anonymous event counts are sent.' } else { 'Telemetry is off. No data leaves this machine.' }
         })
     }
 
@@ -94,7 +94,7 @@ switch ($Action) {
         $cfg = Read-Config
         $cfg.enabled = $true
         $cfg.endpoint = $Endpoint
-        $id = Get-AnonymousId
+        if (-not $cfg.anonId) { $cfg.anonId = [guid]::NewGuid().ToString('N') }
         Write-Config $cfg
         Emit ([pscustomobject]@{ ok = $true; enabled = $true; note = 'Anonymous telemetry enabled.' })
     }
@@ -105,7 +105,9 @@ switch ($Action) {
         $cfg.anonId = ''
         $cfg.endpoint = ''
         Write-Config $cfg
-        if (Test-Path -LiteralPath $queueFile) { Remove-Item -LiteralPath $queueFile -Force -ErrorAction SilentlyContinue }
+        if (Test-Path -LiteralPath $queueFile) {
+            [System.IO.File]::WriteAllText($queueFile, '', (New-Object System.Text.UTF8Encoding($false)))
+        }
         Emit ([pscustomobject]@{ ok = $true; enabled = $false; note = 'Telemetry disabled and local data cleared.' })
     }
 

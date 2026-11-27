@@ -229,3 +229,102 @@ function Get-NGStatus {
         RuleCount    = @(Get-NGRules).Count
     }
 }
+
+# Discover programs without requiring the user to type a full path.
+# Sources: running processes (with Path), uninstall registry entries,
+# and top-level exes in Program Files folders.
+function Get-NGDiscover {
+    param([int]$Limit = 400)
+
+    $map = @{}
+    # Exe names that are helpers, not the app the user actually wants to control.
+    $junkPattern = '(?i)(uninstall|unins|setup|set-up|install|remove|repair|update|updater|crwindowsclientservice|crlogtransport|crash|coresync|ipcbroker|notification|licensing|helper|service|advert|tqcache)'
+
+    # 1. Running processes that expose an executable path
+    $procs = Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.Path }
+    foreach ($p in $procs) {
+        $fp = $p.Path
+        if ([string]::IsNullOrWhiteSpace([string]$fp)) { continue }
+        if (-not $map.ContainsKey($fp)) {
+            $map[$fp] = [pscustomobject]@{
+                Path   = $fp
+                Name   = [System.IO.Path]::GetFileNameWithoutExtension($fp)
+                Source = 'running'
+            }
+        }
+    }
+
+    # 2. Uninstall registry entries (DisplayIcon gives the exe)
+    $keys = @(
+        'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*',
+        'HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*',
+        'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*'
+    )
+    $apps = Get-ItemProperty $keys -ErrorAction SilentlyContinue | Where-Object {
+        $_.DisplayName -and ($_.DisplayIcon -or $_.InstallLocation)
+    }
+    foreach ($a in $apps) {
+        $exe = ''
+        $iconCandidate = ''
+        if ($a.DisplayIcon) {
+            $candidate = ($a.DisplayIcon -split ',')[0].Trim('"')
+            if (-not [string]::IsNullOrWhiteSpace($candidate) -and
+                (Test-Path -LiteralPath $candidate -PathType Leaf) -and
+                [System.IO.Path]::GetExtension($candidate).ToLowerInvariant() -eq '.exe') {
+                $iconCandidate = $candidate
+            }
+        }
+        # Prefer a non-helper exe from the icon's directory or InstallLocation.
+        $searchDir = ''
+        if ($iconCandidate -and $iconCandidate -notmatch $junkPattern) {
+            $exe = $iconCandidate
+        } else {
+            if ($iconCandidate) { $searchDir = Split-Path -Parent $iconCandidate }
+            elseif (-not [string]::IsNullOrWhiteSpace([string]$a.InstallLocation) -and
+                    (Test-Path -LiteralPath $a.InstallLocation -PathType Container)) {
+                $searchDir = $a.InstallLocation
+            }
+            if ($searchDir) {
+                $cands = @(Get-ChildItem -LiteralPath $searchDir -Filter '*.exe' -File -ErrorAction SilentlyContinue)
+                $good = @($cands | Where-Object { $_.Name -notmatch $junkPattern } | Sort-Object Length -Descending)
+                if ($good.Count -gt 0) { $exe = $good[0].FullName }
+                elseif ($iconCandidate) { $exe = $iconCandidate }
+            }
+        }
+        if (-not $exe) { continue }
+        if (-not $map.ContainsKey($exe)) {
+            $map[$exe] = [pscustomobject]@{
+                Path   = $exe
+                Name   = [string]$a.DisplayName
+                Source = 'installed'
+            }
+        }
+    }
+
+    # 3. Top-level exes in Program Files (non-recursive, fast)
+    $dirs = @(
+        "$env:ProgramFiles",
+        "${env:ProgramFiles(x86)}"
+    )
+    foreach ($d in $dirs) {
+        if ([string]::IsNullOrWhiteSpace([string]$d)) { continue }
+        if (-not (Test-Path -LiteralPath $d -PathType Container)) { continue }
+        $subs = Get-ChildItem -LiteralPath $d -Directory -ErrorAction SilentlyContinue
+        foreach ($s in $subs) {
+            $exes = @(Get-ChildItem -LiteralPath $s.FullName -Filter '*.exe' -File -ErrorAction SilentlyContinue |
+                Where-Object { $_.Name -notmatch $junkPattern } | Sort-Object Length -Descending | Select-Object -First 1)
+            foreach ($e in $exes) {
+                if (-not $map.ContainsKey($e.FullName)) {
+                    $map[$e.FullName] = [pscustomobject]@{
+                        Path   = $e.FullName
+                        Name   = [System.IO.Path]::GetFileNameWithoutExtension($e.FullName)
+                        Source = 'programfiles'
+                    }
+                }
+            }
+        }
+    }
+
+    $list = @($map.Values | Sort-Object -Property Name | Select-Object -First $Limit)
+    return $list
+}

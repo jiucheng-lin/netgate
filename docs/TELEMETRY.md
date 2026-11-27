@@ -1,8 +1,8 @@
 # Telemetry Design (DRAFT - not enabled)
 
-Status: **design only, no telemetry code is active in the current release.**
+Status: **implemented, opt-in, disabled by default.**
 
-This document describes how optional, privacy-preserving usage analytics could be added to NetGate. Nothing here is enabled by default.
+This document describes the optional, privacy-preserving usage analytics in NetGate. Nothing is collected or sent until the user explicitly enables it.
 
 ## Why this is sensitive
 
@@ -55,10 +55,13 @@ My recommendation: **B** if you want real usage numbers without maintenance. I c
 
 ## Implementation status
 
-- [ ] Client module (`ops/telemetry.ps1`) - written but not wired in
-- [ ] Consent UI in `web/index.html` - not done
-- [ ] Endpoint URL - not configured
-- [ ] Backend deployed - not done
-- [ ] Privacy policy published - not done
+- [x] Client module (`ops/telemetry.ps1`) - implemented and wired into the server
+- [x] Server-side event hooks (block/unblock/enable/disable/scan/export/import/reset)
+- [x] Consent UI in `web/index.html` - first-run prompt, defaults to No
+- [x] Settings panel - toggle, endpoint field, opt-out clears local data
+- [x] Backend (`worker/worker.js`) - Cloudflare Worker + KV, ingest/stats/health
+- [ ] Endpoint URL - deploy the Worker and paste its `/ingest` URL in Settings
+- [ ] Stats token - set with `wrangler secret put STATS_TOKEN`
+- [ ] Endpoint pinned as build-time default (optional; users can enter it manually)
 
-Nothing ships until the backend is chosen and the consent UI is in place.
+Nothing is collected until a user opts in AND a valid endpoint is configured.

@@ -1,0 +1,20 @@
+# Copy this file to wrangler.toml, fill in the KV namespace ids, then deploy.
+# Docs: docs/DEPLOY-ANALYTICS.md
+
+name = "netgate-telemetry"
+main = "worker.js"
+compatibility_date = "2026-11-27"
+
+# Create namespaces first:
+#   npx wrangler kv namespace create NETGATE_KV
+#   npx wrangler kv namespace create NETGATE_KV --preview
+# Paste the returned ids below.
+
+[[kv_namespaces]]
+binding = "NETGATE_KV"
+id = "REPLACE_WITH_YOUR_KV_ID"
+preview_id = "REPLACE_WITH_YOUR_PREVIEW_KV_ID"
+
+# Secret for the /stats endpoint (set via CLI, do NOT commit the real value):
+#   npx wrangler secret put STATS_TOKEN
+# Do not put the token in this file.
