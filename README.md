@@ -5,9 +5,10 @@
 [![PowerShell](https://img.shields.io/badge/PowerShell-5.1%2B-5391FE.svg)](https://learn.microsoft.com/powershell/)
 [![Stars](https://img.shields.io/github/stars/jiucheng-lin/netgate?style=social)](https://github.com/jiucheng-lin/netgate/stargazers)
 
-> 一个通用的 Windows 应用联网管理工具。给单个程序单独断网，不影响系统和其他软件。
+> **Windows 自带防火墙能断网，但太难用。NetGate 让你点一下就给单个程序断网，不改系统设置。**
 
-**NetGate 不内置任何软件名单，不针对任何特定厂商或产品。** 要管哪个程序，完全由你自己指定。
+一个通用的 Windows 应用联网管理工具。给单个程序单独断网，不影响系统和其他软件。
+**不内置任何软件名单，不针对任何特定厂商或产品。** 要管哪个程序，完全由你自己指定。
 
 ## 它解决什么问题
 
@@ -20,7 +21,16 @@
 
 ![NetGate 主界面](docs/screenshot.png)
 
-> 截图占位：`docs/screenshot.png`。你可以运行 `START.bat` 后自行截图替换。
+## 为什么可以放心用
+
+这是一个要管理员权限、改系统防火墙的工具，所以把信任说清楚：
+
+- **只加自己的规则**：创建的规则一律带 `NG-` 前缀，不修改任何已存在的规则
+- **一键清除**：点「清除全部规则」只删 `NG-` 规则，系统和其他软件的防火墙设置原样不动
+- **完全可逆**：删掉规则、删掉本目录，机器上不留痕迹
+- **默认不联网收集**：服务只监听 `127.0.0.1` 本机；没有首次弹窗，匿名统计默认关闭，要手动到「设置」里开
+- **代码开源可审计**：纯 PowerShell + 一个 HTML 页面，无依赖、无第三方 SDK、无自动更新拉取
+- 详见 [隐私政策](PRIVACY.md)
 
 ## 特性
 
