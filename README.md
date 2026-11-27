@@ -68,6 +68,18 @@
 - [README.md](README.md) — 本文档
 - [CONTRIBUTING.md](CONTRIBUTING.md) — 贡献指南
 - [examples/rules.example.json](examples/rules.example.json) — 配置示例
+- [docs/TELEMETRY.md](docs/TELEMETRY.md) — 遥测设计说明（当前未启用）
+- [ops/repo-stats.ps1](ops/repo-stats.ps1) — 仓库运营数据报告脚本
+
+### 运营数据
+
+维护者可用以下命令拉取仓库的 star/fork/下载量/流量数据：
+
+```powershell
+.\ops\repo-stats.ps1 -Repo jiucheng-lin/netgate -OutFile .\analytics.md
+```
+
+需要本机已登录 `gh auth login`。报告只含仓库级公开指标，不含用户使用数据。
 
 ## 技术栈
 
