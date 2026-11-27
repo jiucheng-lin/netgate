@@ -100,7 +100,7 @@ Cloudflare free tier includes 100,000 Worker requests/day and 1 GB-day of KV sto
 ## Privacy checklist before enabling
 
 - [ ] Privacy statement published in the repo
-- [ ] Consent prompt shown on first run, defaulting to No
+- [ ] Telemetry is off by default and only enabled explicitly in Settings (no first-run popup)
 - [ ] User can turn it off and clear local data at any time
 - [ ] `/stats` protected by token
 - [ ] Endpoint URL pinned in code/config (no third-party relay)

@@ -35,12 +35,12 @@ Event names: `app_start`, `block`, `unblock`, `enable`, `disable`, `scan`, `expo
 
 ## How it would work
 
-1. On first use, the app asks once: "Help improve NetGate by sending anonymous usage counts? [No / Yes]"
-2. If No (default): nothing is stored, nothing is sent.
-3. If Yes: a random UUID is generated and stored locally in `%LOCALAPPDATA%\NetGate\telemetry.json`.
+1. Telemetry is OFF by default. There is no first-run popup; nothing is stored or sent.
+2. To enable, the user opens Settings, enters an endpoint URL and switches telemetry on.
+3. On opt-in, a random UUID is generated and stored locally in `%LOCALAPPDATA%\NetGate\telemetry.json`.
 4. Each action appends one small event to a local queue file.
 5. Events are POSTed to a configured endpoint in batches. On success the queue is cleared. On failure the queue is kept for retry.
-6. The user can disable at any time; disabling deletes the local ID and queue.
+6. The user can disable at any time from Settings; disabling clears the local ID and queue.
 
 ## Backend options (need your decision)
 
@@ -57,8 +57,7 @@ My recommendation: **B** if you want real usage numbers without maintenance. I c
 
 - [x] Client module (`ops/telemetry.ps1`) - implemented and wired into the server
 - [x] Server-side event hooks (block/unblock/enable/disable/scan/export/import/reset)
-- [x] Consent UI in `web/index.html` - first-run prompt, defaults to No
-- [x] Settings panel - toggle, endpoint field, opt-out clears local data
+- [x] Settings panel - toggle, endpoint field, opt-out clears local data (no first-run popup)
 - [x] Backend (`worker/worker.js`) - Cloudflare Worker + KV, ingest/stats/health
 - [ ] Endpoint URL - deploy the Worker and paste its `/ingest` URL in Settings
 - [ ] Stats token - set with `wrangler secret put STATS_TOKEN`

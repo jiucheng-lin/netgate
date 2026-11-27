@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<html lang="zh-CN" data-page-node-id="wCImwHd7y41TH5JwbFWnKM">
+<head data-page-node-id="oxSR3X1DoMqmjWwXFaivnS">
+<meta charset="utf-8" data-page-node-id="1PXpVRIR0XViOpEn7MILPI">
+<meta name="viewport" content="width=device-width, initial-scale=1" data-page-node-id="KlwuDIHmhLkka1NEynutHb">
 <title>NetGate - 应用联网管理</title>
 <style>
   :root {
@@ -91,120 +91,105 @@
   .dragover { outline: 2px dashed var(--accent); outline-offset: -6px; background: var(--accent-soft); }
 </style>
 </head>
-<body>
-<header>
-  <h1><span>Net</span>Gate <small style="font-size:12px;color:var(--muted);font-weight:400">应用联网管理</small></h1>
-  <div class="hd-right">
-    <span class="badge" id="adminBadge">检测中...</span>
-    <button id="btnSettings">设置</button>
+<body data-page-node-id="uDO20BLjvn8jscyDZlevN5">
+<header data-page-node-id="JbGuYocRr5dq315QWt9Y3O">
+  <h1 data-page-node-id="xCnwMiCR6pP0ZGOfYf7pvG"><span data-page-node-id="aBTgGsT7r23GgI3J6prGIe">Net</span>Gate <small style="font-size:12px;color:var(--muted);font-weight:400" data-page-node-id="CJJors8Et0d9NQol8wH1AP">应用联网管理</small></h1>
+  <div class="hd-right" data-page-node-id="bYG5kR8sfteXhLcsl08Wtr">
+    <span class="badge" id="adminBadge" data-page-node-id="W5q1yW4HnepEA1hJpXSMW0">检测中...</span>
+    <button id="btnSettings" data-page-node-id="hVEIm9CY0wClJo4Z6FN0vC">设置</button>
   </div>
 </header>
 
-<div class="wrap" id="dropZone">
-  <div class="card">
-    <h2>状态</h2>
-    <div class="stats">
-      <div class="stat"><b id="sBlocked">-</b><span>已管理程序</span></div>
-      <div class="stat"><b id="sRules">-</b><span>防火墙规则</span></div>
-      <div class="stat"><b id="sVersion">-</b><span>版本</span></div>
+<div class="wrap" id="dropZone" data-page-node-id="GnbkGqTw1x75HBHJC2FHOk">
+  <div class="card" data-page-node-id="qBuxYyMI9Cybo6YH0D3asY">
+    <h2 data-page-node-id="DtS2Llv79TBZVzvAlkJUAY">状态</h2>
+    <div class="stats" data-page-node-id="iOqi0SdRU9nHKAD18B2AIn">
+      <div class="stat" data-page-node-id="2QNWKcRBOhdtSbTiut9IaC"><b id="sBlocked" data-page-node-id="oB0um0bJcix8pKzbSPCpE4">-</b><span data-page-node-id="DRLkDr2SC3zCvkMLuql8vE">已管理程序</span></div>
+      <div class="stat" data-page-node-id="fEZDI3Ra3PWMyGtEW6uM59"><b id="sRules" data-page-node-id="8GGVtyv5vgQvJtS34Cj7OG">-</b><span data-page-node-id="eDmCb3gVZV74QJgb6ufdC3">防火墙规则</span></div>
+      <div class="stat" data-page-node-id="Pv0vHgE2U5Q8G9v5zhwZ1C"><b id="sVersion" data-page-node-id="GUO6BazVpGHrxHS4WOfDap">-</b><span data-page-node-id="J60DuVxBeEUlCBOhekgWji">版本</span></div>
     </div>
   </div>
 
-  <div class="card">
-    <h2>添加程序</h2>
-    <div class="row">
-      <input type="text" id="exePath" placeholder="输入 .exe 路径，或点「从列表选择」">
-      <button id="btnPick">从列表选择</button>
-      <button class="primary" id="btnBlock">禁止联网</button>
+  <div class="card" data-page-node-id="SJ4O5uEZB0wULAYTLQ1iax">
+    <h2 data-page-node-id="yGIH83mTVngYkLfiRuCtUZ">添加程序</h2>
+    <div class="row" data-page-node-id="ECP7uRB0E1bx2ynJRnkMFw">
+      <input type="text" id="exePath" placeholder="输入 .exe 路径，或点「从列表选择」" data-page-node-id="wyyh1nJ8nnTz2idjntRNtf">
+      <button id="btnPick" data-page-node-id="3oD2AQiCkfXP6VoiyXpbEJ">从列表选择</button>
+      <button class="primary" id="btnBlock" data-page-node-id="6hhTJZhg9IvT4tWgeePp1c">禁止联网</button>
     </div>
-    <div class="msg" id="addMsg"></div>
-    <div class="hint">也可以直接把 .exe 文件拖到本页面。只对指定程序生效，不影响其他软件。</div>
+    <div class="msg" id="addMsg" data-page-node-id="Vmuqbg3139Z5Tc3Vm6CkJl"></div>
+    <div class="hint" data-page-node-id="oQrZDuwx9B71C0YOyXs8Wg">也可以直接把 .exe 文件拖到本页面。只对指定程序生效，不影响其他软件。</div>
   </div>
 
-  <div class="card">
-    <h2>从目录批量选择</h2>
-    <div class="row">
-      <input type="text" id="scanDir" placeholder="输入目录路径，例如 C:\Apps">
-      <label style="font-size:13px"><input type="checkbox" id="scanRecurse"> 包含子目录</label>
-      <button id="btnScan">扫描</button>
+  <div class="card" data-page-node-id="u85cqb80G1GX9on0I2opEa">
+    <h2 data-page-node-id="sMTMDVvtQfKK2rjROxqVJ0">从目录批量选择</h2>
+    <div class="row" data-page-node-id="aO9hbIf15n1n7sN9g0nm7j">
+      <input type="text" id="scanDir" placeholder="输入目录路径，例如 C:\Apps" data-page-node-id="OneKupYPjWxbRC78nNE8ji">
+      <label style="font-size:13px" data-page-node-id="ezkcuXVp8A4kDN0P17MROl"><input type="checkbox" id="scanRecurse" data-page-node-id="W8adyOP3ATiIoRM9anz1Dh"> 包含子目录</label>
+      <button id="btnScan" data-page-node-id="SPIZEqigNrNRkZaexCzvO5">扫描</button>
     </div>
-    <div class="scanlist" id="scanList"></div>
-    <div class="row" style="margin-top:10px; display:none" id="scanActions">
-      <button class="primary" id="btnBlockSelected">禁止选中的程序</button>
+    <div class="scanlist" id="scanList" data-page-node-id="eNvw4EGChz9AJAAZXaHDfa"></div>
+    <div class="row" style="margin-top:10px; display:none" id="scanActions" data-page-node-id="yfJqxtoaiOgYuRET9sfrri">
+      <button class="primary" id="btnBlockSelected" data-page-node-id="EhqLmvKBtAD2K89I91ekB3">禁止选中的程序</button>
     </div>
-    <div class="msg" id="scanMsg"></div>
+    <div class="msg" id="scanMsg" data-page-node-id="HZY4SKo6o6zNHxmx462kgI"></div>
   </div>
 
-  <div class="card">
-    <h2>已管理程序</h2>
-    <table>
-      <thead><tr><th>程序路径</th><th>出站</th><th>入站</th><th>状态</th><th>操作</th></tr></thead>
-      <tbody id="ruleBody"></tbody>
+  <div class="card" data-page-node-id="YVYMl8EIuEXubEBA3SXXXl">
+    <h2 data-page-node-id="2uHGFwtDzLCaM9YK246GbH">已管理程序</h2>
+    <table data-page-node-id="5jbB8ByS9UQp0Yi1jactvU">
+      <thead data-page-node-id="6jqcgYUSm8pPrPsHIUQFtr"><tr data-page-node-id="revBzGIA7WxZXH8rNGj6iJ"><th data-page-node-id="OYiF9NqnrX1qHAkGbnfdaH">程序路径</th><th data-page-node-id="yZZBTFO2Wwa2ZhymhbJpCt">出站</th><th data-page-node-id="QKOb2Aj5SKI9bUjMEBGT6L">入站</th><th data-page-node-id="FxTIlUEOSD0Aqe8PEphozd">状态</th><th data-page-node-id="y5m1qdoNHG6MgewKzG3xRh">操作</th></tr></thead>
+      <tbody id="ruleBody" data-page-node-id="LAGdaSUG9zDrH1u14lueVK"></tbody>
     </table>
-    <div class="empty" id="emptyHint" style="display:none">还没有管理任何程序</div>
+    <div class="empty" id="emptyHint" style="display:none" data-page-node-id="9gqEzzgHKxqnJ9ktlFaj6f">还没有管理任何程序</div>
   </div>
 
-  <div class="card">
-    <h2>备份与恢复</h2>
-    <div class="row">
-      <button id="btnExport">导出配置</button>
-      <button id="btnImport">导入配置</button>
-      <input type="file" id="importFile" accept=".json" style="display:none">
-      <button class="danger" id="btnReset">清除全部规则</button>
+  <div class="card" data-page-node-id="bqfZhXlUyFnvYys0A5pp6D">
+    <h2 data-page-node-id="KEciMklAV4MHKGrFCqPBEi">备份与恢复</h2>
+    <div class="row" data-page-node-id="Pg41OnPb9Di1aI84FG1xzK">
+      <button id="btnExport" data-page-node-id="7kuEYqAhOErrAMKc203GWi">导出配置</button>
+      <button id="btnImport" data-page-node-id="yrmBnIYZJJWDwDg9kVKDt0">导入配置</button>
+      <input type="file" id="importFile" accept=".json" style="display:none" data-page-node-id="6RKkpzOSnRYNURxGLFvBCn">
+      <button class="danger" id="btnReset" data-page-node-id="xFpGNoWCCBHYpkhmojZZZW">清除全部规则</button>
     </div>
-    <div class="msg" id="ioMsg"></div>
+    <div class="msg" id="ioMsg" data-page-node-id="vDwRCzVyirqkEIElzzUSWI"></div>
   </div>
 </div>
 
-<footer>NetGate · 本地运行，仅监听 127.0.0.1 · 通用工具，不含任何软件名单</footer>
+<footer data-page-node-id="JjB6GSJmLMBc1BIhiNQWGb">NetGate · 本地运行，仅监听 127.0.0.1 · 通用工具，不含任何软件名单</footer>
 
 <!-- Program picker -->
-<div class="overlay" id="pickOverlay">
-  <div class="modal">
-    <div class="modal-head"><h3>选择程序</h3><button class="x" id="pickClose">&times;</button></div>
-    <div class="modal-body">
-      <input type="text" class="picker-search" id="pickSearch" placeholder="输入名称或路径搜索...">
-      <div class="picker-list" id="pickList"><div class="empty">加载中...</div></div>
+<div class="overlay" id="pickOverlay" data-page-node-id="9fl1drgJi93tBjMWKKO9ea">
+  <div class="modal" data-page-node-id="qFkDWiYctwk6Rb9ESIWcwf">
+    <div class="modal-head" data-page-node-id="qEQ5ArXw0Pmb0rYaHJGuL5"><h3 data-page-node-id="LnPpszGZRuLs6Xz1MRhFSJ">选择程序</h3><button class="x" id="pickClose" data-page-node-id="zOGKx3OhFMOH1T4M4WtflC">&times;</button></div>
+    <div class="modal-body" data-page-node-id="bX3dFF8TKP4nUepG2NsFlN">
+      <input type="text" class="picker-search" id="pickSearch" placeholder="输入名称或路径搜索..." data-page-node-id="wJzfxVLaCAGSWRb06Oc9Nv">
+      <div class="picker-list" id="pickList" data-page-node-id="DFEahC0CINxWvoB6T6XkSZ"><div class="empty" data-page-node-id="ekN4ShH5oHYKe0QEJDei2u">加载中...</div></div>
     </div>
-    <div class="modal-foot"><button id="pickCancel">取消</button></div>
+    <div class="modal-foot" data-page-node-id="z8bg7ugXu9yVEEJyTdTmcO"><button id="pickCancel" data-page-node-id="XuivBmGAdcBSdGwFgbaSnp">取消</button></div>
   </div>
 </div>
 
 <!-- Settings -->
-<div class="overlay" id="setOverlay">
-  <div class="modal" style="max-width:560px">
-    <div class="modal-head"><h3>设置</h3><button class="x" id="setClose">&times;</button></div>
-    <div class="modal-body">
-      <h4 style="margin:0 0 6px;font-size:14px">匿名使用统计</h4>
-      <div class="hint" style="margin:0 0 10px">默认关闭。开启后只上报功能使用次数（如「禁止联网 1 次」），不含任何程序路径、文件名、用户名或 IP。随时可关闭并清除本地数据。</div>
-      <div class="toggle-row">
-        <div><b>发送匿名统计</b><div class="hint" id="teleState">当前：关闭</div></div>
-        <label class="switch"><input type="checkbox" id="teleToggle"><span class="slider"></span></label>
+<div class="overlay" id="setOverlay" data-page-node-id="V5lgI2L9QWZLGhIdDlylYE">
+  <div class="modal" style="max-width:560px" data-page-node-id="lOMFiAOfNX3XRQqHR88leH">
+    <div class="modal-head" data-page-node-id="AW7I0BeruAD3z79sq8u3Nq"><h3 data-page-node-id="xPdNbmmPx5SWN0OVWKfCCW">设置</h3><button class="x" id="setClose" data-page-node-id="YBdW0KcbnFam9gUF85gHzh">&times;</button></div>
+    <div class="modal-body" data-page-node-id="KNR4SGJqRM2vT0RKTcPU8Y">
+      <h4 style="margin:0 0 6px;font-size:14px" data-page-node-id="JQC8tg57gw3luIN7g9Mm1Z">匿名使用统计</h4>
+      <div class="hint" style="margin:0 0 10px" data-page-node-id="YMKVfIELWMaA0JxnTg35Dq">默认关闭。开启后只上报功能使用次数（如「禁止联网 1 次」），不含任何程序路径、文件名、用户名或 IP。随时可关闭并清除本地数据。</div>
+      <div class="toggle-row" data-page-node-id="wHm4zkEAoeD5qwfIWzDnvW">
+        <div data-page-node-id="kicHE7H5M386QfnSBwnKx1"><b data-page-node-id="QgKj1JvcEWu6S8wl0Q1e4H">发送匿名统计</b><div class="hint" id="teleState" data-page-node-id="UjvDfNJPpUbFIbARw6d09F">当前：关闭</div></div>
+        <label class="switch" data-page-node-id="Ck0082mTjRB8DFAFLyrlkn"><input type="checkbox" id="teleToggle" data-page-node-id="Ha4miAbt5RFKhLTBZ2QHNT"><span class="slider" data-page-node-id="jT7VzrHpCs2rc0vinVIHuK"></span></label>
       </div>
-      <div class="field" id="endpointField" style="display:none">
-        <label>统计服务地址（/ingest 端点）</label>
-        <input type="text" id="teleEndpoint" placeholder="https://your-worker.workers.dev/ingest">
+      <div class="field" id="endpointField" style="display:none" data-page-node-id="sChUqpmeouvCBTNwFI4aPs">
+        <label data-page-node-id="xOJBE8YY4vDlHSNv1GiDqQ">统计服务地址（/ingest 端点）</label>
+        <input type="text" id="teleEndpoint" placeholder="https://your-worker.workers.dev/ingest" data-page-node-id="J9mj0EvDB3YCKHoTqKWV7u">
       </div>
-      <div class="row" id="teleSaveRow" style="display:none;margin-top:10px">
-        <button class="primary" id="teleSave">保存设置</button>
+      <div class="row" id="teleSaveRow" style="display:none;margin-top:10px" data-page-node-id="m7NVGGCbBDawbqEk4pfIDx">
+        <button class="primary" id="teleSave" data-page-node-id="9yizHJWqWSGX3NqTurJQVv">保存设置</button>
       </div>
     </div>
-    <div class="modal-foot"><button id="setDone">完成</button></div>
-  </div>
-</div>
-
-<!-- First-run consent -->
-<div class="overlay show" id="consentOverlay">
-  <div class="modal" style="max-width:520px">
-    <div class="modal-head"><h3>欢迎使用 NetGate</h3></div>
-    <div class="modal-body">
-      <p style="line-height:1.8;margin:0 0 12px">NetGate 是一个通用的程序联网管理工具，不含任何软件名单，也不默认收集数据。</p>
-      <p style="line-height:1.8;margin:0">是否愿意发送<strong>匿名功能使用统计</strong>，帮助改进这个工具？只统计「用了哪些功能、各多少次」，<strong>不包含</strong>程序路径、文件名、用户名或 IP。可以随时在「设置」里关闭。</p>
-    </div>
-    <div class="modal-foot">
-      <button id="consentNo">不用，谢谢</button>
-      <button class="primary" id="consentYes">帮助改进</button>
-    </div>
+    <div class="modal-foot" data-page-node-id="Gxmja5TEzhjTvENGBPVho1"><button id="setDone" data-page-node-id="iKVlnqMgapwxaVgwlBvQy0">完成</button></div>
   </div>
 </div>
 
@@ -228,7 +213,6 @@ function escapeHtml(s) {
 }
 function attr(s) { return escapeHtml(s); }
 
-var consentKey = 'netgate_consent_v1';
 var pickCache = null;
 
 function refreshStatus() {
@@ -437,23 +421,7 @@ $('teleSave').onclick = function(){
   });
 };
 
-// ---- First-run consent ----
-(function initConsent(){
-  $('consentOverlay').style.display = localStorage.getItem(consentKey) ? 'none' : 'flex';
-})();
-$('consentNo').onclick = function(){
-  localStorage.setItem(consentKey, 'declined');
-  $('consentOverlay').classList.remove('show');
-  refreshAll();
-};
-$('consentYes').onclick = function(){
-  localStorage.setItem(consentKey, 'accepted');
-  $('consentOverlay').classList.remove('show');
-  $('setOverlay').classList.add('show');
-  refreshTelemetry();
-  refreshAll();
-};
-
+// Telemetry stays OFF by default. Users can opt in any time from Settings.
 refreshAll();
 </script>
 </body>
