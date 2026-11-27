@@ -1,0 +1,15 @@
+# Test / temporary artifacts
+_test_*
+*.tmp
+*.log
+*.bak
+
+# Local rule backups (may contain user paths)
+*.json.bak
+rules.json
+netgate-rules.json
+
+# OS files
+Thumbs.db
+desktop.ini
+.DS_Store

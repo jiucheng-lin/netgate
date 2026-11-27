@@ -1,0 +1,12 @@
+{
+  "tool": "NetGate",
+  "version": "1.0.0",
+  "exported": "2026-01-01T00:00:00.0000000+08:00",
+  "comment": "Replace the paths below with programs you actually want to manage. This file contains no real paths.",
+  "rules": [
+    {
+      "path": "C:\\Path\\To\\YourProgram.exe",
+      "enabled": true
+    }
+  ]
+}
